@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - E-Dnevnik</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">E-Dnevnik</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/index">Home</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/admin">Admin Panel</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('TEACHER')">
+                        <a class="nav-link" href="/grades">Grades</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('STUDENT')">
+                        <a class="nav-link" href="/my-grades">My Grades</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">
+                        Welcome, <span sec:authentication="name">Username</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post">
+                        <button class="btn btn-outline-light" type="submit">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1>Welcome to E-Dnevnik</h1>
+                <p>Select an option from the navigation menu to get started.</p>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4 mb-4" sec:authorize="hasRole('ADMIN')">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Administration</h5>
+                        <p class="card-text">Manage users, schools, and system settings.</p>
+                        <a href="/admin" class="btn btn-primary">Go to Admin Panel</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4" sec:authorize="hasRole('TEACHER')">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Grade Management</h5>
+                        <p class="card-text">View and manage student grades.</p>
+                        <a href="/grades" class="btn btn-primary">Manage Grades</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4" sec:authorize="hasRole('STUDENT')">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">My Grades</h5>
+                        <p class="card-text">View your academic performance.</p>
+                        <a href="/my-grades" class="btn btn-primary">View Grades</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
