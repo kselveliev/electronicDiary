@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage School Director</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">E-Dnevnik</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index">Home</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/admin">Admin Panel</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link active" href="/schools">Schools</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">
+                        Welcome, <span sec:authentication="name">Username</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post">
+                        <button class="btn btn-outline-light" type="submit">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="mb-0">Manage School Director</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h3>Current School Information</h3>
+                            <p><strong>School Name:</strong> <span th:text="${school.name}">School Name</span></p>
+                            <p><strong>Address:</strong> <span th:text="${school.address}">School Address</span></p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h3>Current Director</h3>
+                            <div th:if="${school.director != null}">
+                                <p><strong>Name:</strong> <span th:text="${school.director.firstName + ' ' + school.director.lastName}">Director Name</span></p>
+                                <p><strong>Email:</strong> <span th:text="${school.director.email}">Director Email</span></p>
+                                <p><strong>Phone:</strong> <span th:text="${school.director.phoneNumber}">Director Phone</span></p>
+                            </div>
+                            <p th:unless="${school.director != null}" class="text-muted">No director assigned</p>
+                        </div>
+
+                        <form th:action="@{/schools/{id}/director(id=${school.id})}" method="post">
+                            <div class="mb-3">
+                                <label for="directorId" class="form-label">Select New Director</label>
+                                <select class="form-select" id="directorId" name="id" required>
+                                    <option value="">Choose a director...</option>
+                                    <option th:each="user : ${directors}"
+                                            th:value="${user.id}"
+                                            th:text="${user.firstName + ' ' + user.lastName + ' (' + user.email + ')'}"
+                                            th:selected="${school.director != null && school.director.id == user.id}">
+                                        Director Name
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="/schools" class="btn btn-secondary">Back to Schools</a>
+                                <button type="submit" class="btn btn-primary">Update Director</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

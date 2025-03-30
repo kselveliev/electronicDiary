@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - E-Dnevnik</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -21,11 +22,17 @@
                     <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                         <a class="nav-link" href="/admin">Admin Panel</a>
                     </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/schools">Schools</a>
+                    </li>
                     <li class="nav-item" sec:authorize="hasRole('TEACHER')">
                         <a class="nav-link" href="/grades">Grades</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('STUDENT')">
                         <a class="nav-link" href="/my-grades">My Grades</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('PARENT')">
+                        <a class="nav-link" href="/children">My Children</a>
                     </li>
                 </ul>
                 <div class="d-flex">
@@ -41,15 +48,11 @@
     </nav>
 
     <div class="container mt-4">
-        <div class="row">
-            <div class="col-12">
-                <h1>Welcome to E-Dnevnik</h1>
-                <p>Select an option from the navigation menu to get started.</p>
-            </div>
-        </div>
+        <h1 class="mb-4">Welcome to E-Dnevnik</h1>
 
-        <div class="row mt-4">
-            <div class="col-md-4 mb-4" sec:authorize="hasRole('ADMIN')">
+        <!-- Admin Section -->
+        <div class="row" sec:authorize="hasRole('ADMIN')">
+            <div class="col-md-4 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Administration</h5>
@@ -58,7 +61,33 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-4" sec:authorize="hasRole('TEACHER')">
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">School Management</h5>
+                        <p class="card-text">Manage schools and their directors.</p>
+                        <a href="/schools" class="btn btn-primary">Manage Schools</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Director Section -->
+        <div class="row" sec:authorize="hasRole('DIRECTOR')">
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">School Management</h5>
+                        <p class="card-text">Manage your school's details and staff.</p>
+                        <a href="/schools" class="btn btn-primary">Manage School</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Section -->
+        <div class="row" sec:authorize="hasRole('TEACHER')">
+            <div class="col-md-4 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Grade Management</h5>
@@ -67,12 +96,29 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-4" sec:authorize="hasRole('STUDENT')">
+        </div>
+
+        <!-- Student Section -->
+        <div class="row" sec:authorize="hasRole('STUDENT')">
+            <div class="col-md-4 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">My Grades</h5>
                         <p class="card-text">View your academic performance.</p>
                         <a href="/my-grades" class="btn btn-primary">View Grades</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parent Section -->
+        <div class="row" sec:authorize="hasRole('PARENT')">
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">My Children</h5>
+                        <p class="card-text">View your children's academic performance.</p>
+                        <a href="/children" class="btn btn-primary">View Children</a>
                     </div>
                 </div>
             </div>

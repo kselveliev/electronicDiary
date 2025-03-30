@@ -1,56 +1,170 @@
 package com.ednevnik.dnevnik.controller;
 
 import com.ednevnik.dnevnik.model.School;
-import com.ednevnik.dnevnik.service.SchoolService;
+import com.ednevnik.dnevnik.model.User;
+import com.ednevnik.dnevnik.model.UserRole;
+import com.ednevnik.dnevnik.repository.SchoolRepository;
+import com.ednevnik.dnevnik.repository.UserRepository;
+import com.ednevnik.dnevnik.security.UserDetailsImpl;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/schools")
-@RequiredArgsConstructor
 public class SchoolController {
 
-    private final SchoolService schoolService;
+    private final SchoolRepository schoolRepository;
+    private final UserRepository userRepository;
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<School> createSchool(@Valid @RequestBody SchoolRequest request) {
-        School school = new School();
-        school.setName(request.name());
-        school.setAddress(request.address());
-        return ResponseEntity.ok(schoolService.save(school));
+    public SchoolController(SchoolRepository schoolRepository, UserRepository userRepository) {
+        this.schoolRepository = schoolRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
-    public ResponseEntity<List<School>> getAllSchools() {
-        return ResponseEntity.ok(schoolService.findAll());
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
+    public String listSchools(Model model) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userDetails.getUser();
+
+        List<School> schools;
+        if (currentUser.getRole() == UserRole.ROLE_ADMIN) {
+            schools = schoolRepository.findAll();
+        } else {
+            schools = List.of(schoolRepository.findByDirector(currentUser)
+                    .orElseThrow(() -> new RuntimeException("School not found for director")));
+        }
+
+        model.addAttribute("schools", schools);
+        return "schools/list";
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<School> getSchool(@PathVariable Long id) {
-        return ResponseEntity.ok(schoolService.findById(id));
-    }
-
-    @PutMapping("/{id}")
+    @GetMapping("/new")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<School> updateSchool(@PathVariable Long id, @Valid @RequestBody SchoolRequest request) {
-        School school = schoolService.findById(id);
-        school.setName(request.name());
-        school.setAddress(request.address());
-        return ResponseEntity.ok(schoolService.save(school));
+    public String showCreateForm(Model model) {
+        model.addAttribute("school", new School());
+        return "schools/form";
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/new")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteSchool(@PathVariable Long id) {
-        schoolService.deleteById(id);
-        return ResponseEntity.ok().build();
-    }
-}
+    public String createSchool(@Valid @ModelAttribute School school,
+                             BindingResult result,
+                             RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            return "schools/form";
+        }
 
-record SchoolRequest(String name, String address) {} 
+        schoolRepository.save(school);
+        redirectAttributes.addFlashAttribute("success", "School created successfully");
+        return "redirect:/schools";
+    }
+
+    @GetMapping("/{id}/edit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        School school = schoolRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("School not found"));
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userDetails.getUser();
+
+        if (currentUser.getRole() == UserRole.ROLE_DIRECTOR && !school.getDirector().equals(currentUser)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        model.addAttribute("school", school);
+        return "schools/form";
+    }
+
+    @PostMapping("/{id}/edit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
+    public String updateSchool(@PathVariable Long id,
+                             @Valid @ModelAttribute School school,
+                             BindingResult result,
+                             RedirectAttributes redirectAttributes) {
+        if (result.hasErrors()) {
+            return "schools/form";
+        }
+
+        School existingSchool = schoolRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("School not found"));
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userDetails.getUser();
+
+        if (currentUser.getRole() == UserRole.ROLE_DIRECTOR && !existingSchool.getDirector().equals(currentUser)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        school.setId(id);
+        schoolRepository.save(school);
+        redirectAttributes.addFlashAttribute("success", "School updated successfully");
+        return "redirect:/schools";
+    }
+
+    @PostMapping("/{id}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String deleteSchool(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        schoolRepository.deleteById(id);
+        redirectAttributes.addFlashAttribute("success", "School deleted successfully");
+        return "redirect:/schools";
+    }
+
+    @GetMapping("/{id}/director")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
+    public String showDirectorForm(@PathVariable Long id, Model model) {
+        School school = schoolRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("School not found"));
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userDetails.getUser();
+
+        if (currentUser.getRole() == UserRole.ROLE_DIRECTOR && !school.getDirector().equals(currentUser)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        List<User> directors = userRepository.findByRole(UserRole.ROLE_DIRECTOR);
+
+        model.addAttribute("school", school);
+        model.addAttribute("directors", directors);
+        return "schools/director-form";
+    }
+
+    @PostMapping("/{id}/director")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
+    public String updateDirector(@PathVariable Long id,
+                               @ModelAttribute User director,
+                               RedirectAttributes redirectAttributes) {
+        School school = schoolRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("School not found"));
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userDetails.getUser();
+
+        if (currentUser.getRole() == UserRole.ROLE_DIRECTOR && !school.getDirector().equals(currentUser)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        User existingDirector = userRepository.findById(director.getId())
+                .orElseThrow(() -> new RuntimeException("Director not found"));
+
+        if (existingDirector.getRole() != UserRole.ROLE_DIRECTOR) {
+            throw new RuntimeException("User is not a director");
+        }
+
+        school.setDirector(existingDirector);
+        schoolRepository.save(school);
+        redirectAttributes.addFlashAttribute("success", "School director updated successfully");
+        return "redirect:/schools";
+    }
+} 
