@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @DiscriminatorColumn(name = "role_type", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "users")
 public abstract class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

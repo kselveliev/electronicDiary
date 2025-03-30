@@ -7,6 +7,7 @@ import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.UserRepository;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,17 +20,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 @Controller
+@AllArgsConstructor
 @RequestMapping("/schools")
 @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
 public class SchoolController {
 
     private final SchoolRepository schoolRepository;
     private final UserRepository userRepository;
-
-    public SchoolController(SchoolRepository schoolRepository, UserRepository userRepository) {
-        this.schoolRepository = schoolRepository;
-        this.userRepository = userRepository;
-    }
 
     @GetMapping
     public String listSchools(Model model) {

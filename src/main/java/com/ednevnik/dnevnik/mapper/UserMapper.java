@@ -3,13 +3,13 @@ package com.ednevnik.dnevnik.mapper;
 import com.ednevnik.dnevnik.dto.UserDto;
 import com.ednevnik.dnevnik.model.*;
 import com.ednevnik.dnevnik.repository.SchoolRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class UserMapper {
 
-    @Autowired
     private SchoolRepository schoolRepository;
 
     public UserDto toDto(User user) {

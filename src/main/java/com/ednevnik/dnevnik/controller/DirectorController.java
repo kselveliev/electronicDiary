@@ -6,9 +6,9 @@ import com.ednevnik.dnevnik.model.School;
 import com.ednevnik.dnevnik.model.User;
 import com.ednevnik.dnevnik.model.UserRole;
 import com.ednevnik.dnevnik.model.Director;
-import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.UserRepository;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;
+import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,24 +21,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.validation.Valid;
 
 @Controller
+@AllArgsConstructor
 @RequestMapping("/director")
 @PreAuthorize("hasRole('DIRECTOR')")
 public class DirectorController {
 
-    private final SchoolRepository schoolRepository;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public DirectorController(SchoolRepository schoolRepository,
-                            UserRepository userRepository,
-                            UserMapper userMapper,
-                            PasswordEncoder passwordEncoder) {
-        this.schoolRepository = schoolRepository;
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @GetMapping("/users")
     public String listUsers(Model model) {

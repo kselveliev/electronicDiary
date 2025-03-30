@@ -8,6 +8,7 @@ import com.ednevnik.dnevnik.model.Student;
 import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.UserRepository;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;
+import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -19,15 +20,11 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/schools")
+@AllArgsConstructor
 public class SchoolEnrollmentController {
 
     private final SchoolRepository schoolRepository;
     private final UserRepository userRepository;
-
-    public SchoolEnrollmentController(SchoolRepository schoolRepository, UserRepository userRepository) {
-        this.schoolRepository = schoolRepository;
-        this.userRepository = userRepository;
-    }
 
     @GetMapping("/{id}/enrollment")
     @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")

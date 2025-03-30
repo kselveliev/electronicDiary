@@ -2,9 +2,6 @@ package com.ednevnik.dnevnik.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.util.Set;
 
 @Getter
 @Entity

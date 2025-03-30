@@ -1,7 +1,7 @@
 package com.ednevnik.dnevnik.model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
+
 
 @Entity
 @Table(name = "attendance")

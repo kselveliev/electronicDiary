@@ -7,6 +7,7 @@ import com.ednevnik.dnevnik.model.UserRole;
 import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.UserRepository;
 import com.ednevnik.dnevnik.validation.UserValidator;
+import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.validation.Valid;
 
 @Controller
+@AllArgsConstructor
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
@@ -27,18 +29,6 @@ public class AdminController {
     private final UserMapper userMapper;
     private final UserValidator userValidator;
     private final PasswordEncoder passwordEncoder;
-
-    public AdminController(UserRepository userRepository,
-                         SchoolRepository schoolRepository,
-                         UserMapper userMapper,
-                         UserValidator userValidator,
-                         PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.schoolRepository = schoolRepository;
-        this.userMapper = userMapper;
-        this.userValidator = userValidator;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @GetMapping
     public String showAdminPanel(Model model) {
