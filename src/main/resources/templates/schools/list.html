@@ -55,7 +55,6 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Address</th>
                         <th>City</th>
                         <th>Phone</th>
                         <th>Email</th>
@@ -66,19 +65,17 @@
                 <tbody>
                     <tr th:each="school : ${schools}">
                         <td th:text="${school.name}">School Name</td>
-                        <td th:text="${school.address}">School Address</td>
-                        <td th:text="${school.city}">School City</td>
-                        <td th:text="${school.phoneNumber}">Phone Number</td>
+                        <td th:text="${school.city}">City</td>
+                        <td th:text="${school.phoneNumber}">Phone</td>
                         <td th:text="${school.email}">Email</td>
-                        <td th:text="${school.director != null ? school.director.firstName + ' ' + school.director.lastName : 'Not Assigned'}">Director Name</td>
+                        <td th:text="${school.director != null ? school.director.firstName + ' ' + school.director.lastName : 'No Director'}">Director</td>
                         <td>
                             <div class="btn-group" role="group">
                                 <a th:href="@{/schools/{id}/edit(id=${school.id})}" 
                                    class="btn btn-sm btn-primary">Edit</a>
-                                <a th:href="@{/schools/{id}/director(id=${school.id})}" 
-                                   class="btn btn-sm btn-info">Manage Director</a>
-                                <form th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
-                                      th:action="@{/schools/{id}/delete(id=${school.id})}"
+                                <a th:href="@{/schools/{id}/enrollment(id=${school.id})}" 
+                                   class="btn btn-sm btn-info">Manage Staff</a>
+                                <form th:action="@{/schools/{id}/delete(id=${school.id})}"
                                       method="post"
                                       style="display: inline;">
                                     <button type="submit" 

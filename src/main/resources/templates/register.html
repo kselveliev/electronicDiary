@@ -23,7 +23,7 @@
 </head>
 <body class="d-flex align-items-center py-4 bg-body-tertiary">
     <main class="form-signin w-100 m-auto">
-        <form th:action="@{/api/auth/register}" method="post">
+        <form th:action="@{/api/auth/register}" th:object="${user}" method="post">
             <div class="text-center mb-4">
                 <img class="mb-2 logo-img" src="/images/logo.png" alt="E-Dnevnik Logo">
                 <h1 class="h3 mb-3 fw-normal">Register for E-Dnevnik</h1>
@@ -33,40 +33,58 @@
                 Error message
             </div>
 
+            <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger">
+                <ul class="mb-0">
+                    <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                </ul>
+            </div>
+
             <div class="form-floating">
-                <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+                <input type="text" class="form-control" id="username" th:field="*{username}" placeholder="Username" required>
                 <label for="username">Username</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
             </div>
 
             <div class="form-floating">
-                <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+                <input type="email" class="form-control" id="email" th:field="*{email}" placeholder="name@example.com" required>
                 <label for="email">Email address</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
             </div>
 
             <div class="form-floating">
-                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                <input type="password" class="form-control" id="password" th:field="*{password}" placeholder="Password" required>
                 <label for="password">Password</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
             </div>
 
             <div class="form-floating">
-                <input type="text" class="form-control" id="firstName" name="firstName" placeholder="First Name" required>
+                <input type="text" class="form-control" id="firstName" th:field="*{firstName}" placeholder="First Name" required>
                 <label for="firstName">First Name</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
             </div>
 
             <div class="form-floating">
-                <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Last Name" required>
+                <input type="text" class="form-control" id="lastName" th:field="*{lastName}" placeholder="Last Name" required>
                 <label for="lastName">Last Name</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
             </div>
 
             <div class="form-floating">
-                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Phone Number">
+                <input type="text" class="form-control" id="nationalId" th:field="*{nationalId}" placeholder="National ID">
+                <label for="nationalId">National ID (Optional)</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('nationalId')}" th:errors="*{nationalId}"></div>
+            </div>
+
+            <div class="form-floating">
+                <input type="tel" class="form-control" id="phoneNumber" th:field="*{phoneNumber}" placeholder="Phone Number">
                 <label for="phoneNumber">Phone Number (Optional)</label>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
             </div>
 
             <button class="btn btn-primary w-100 py-2 mt-3" type="submit">Register</button>
 
             <div class="text-center mt-3">
-                <a href="/login" class="text-decoration-none">Already have an account? Login here</a>
+                <a th:href="@{/api/auth/login}" class="text-decoration-none">Already have an account? Login here</a>
             </div>
         </form>
     </main>

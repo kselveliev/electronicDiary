@@ -1,6 +1,6 @@
 package com.ednevnik.dnevnik.init;
 
-import com.ednevnik.dnevnik.model.User;
+import com.ednevnik.dnevnik.model.Admin;
 import com.ednevnik.dnevnik.model.UserRole;
 import com.ednevnik.dnevnik.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -21,11 +21,14 @@ public class UserInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if (userRepository.count() == 0) {
-            User adminUser = new User();
+            Admin adminUser = new Admin();
             adminUser.setUsername("admin");
             adminUser.setEmail("admin@ednevnik.com");
             adminUser.setPassword(passwordEncoder.encode("shefcheto"));
             adminUser.setRole(UserRole.ROLE_ADMIN);
+            adminUser.setFirstName("Admin");
+            adminUser.setLastName("User");
+            adminUser.setNationalId("ADMIN001");
 
             userRepository.save(adminUser);
         }

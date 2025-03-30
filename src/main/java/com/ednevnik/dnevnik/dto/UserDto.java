@@ -26,11 +26,13 @@ public class UserDto {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
-    @NotNull(message = "Role is required")
     private UserRole role;
 
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Please enter a valid phone number (10-15 digits, may start with +)")
     private String phoneNumber;
+
+    private String nationalId;
+    private Long schoolId;
 
     // Default constructor
     public UserDto() {}
@@ -111,5 +113,21 @@ public class UserDto {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getNationalId() {
+        return nationalId;
+    }
+
+    public void setNationalId(String nationalId) {
+        this.nationalId = nationalId;
+    }
+
+    public Long getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(Long schoolId) {
+        this.schoolId = schoolId;
     }
 } 

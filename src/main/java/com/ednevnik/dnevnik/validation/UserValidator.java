@@ -68,5 +68,12 @@ public class UserValidator implements Validator {
                     "Please enter a valid phone number (10-15 digits, may start with +)");
             }
         }
+
+        // National ID validation (optional but unique if provided)
+        if (user.getNationalId() != null && !user.getNationalId().isEmpty()) {
+            if (user.getId() == null && userRepository.existsByNationalId(user.getNationalId())) {
+                errors.rejectValue("nationalId", "field.duplicate", "National ID already exists");
+            }
+        }
     }
 } 

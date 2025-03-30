@@ -2,7 +2,6 @@ package com.ednevnik.dnevnik.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.Set;
 
@@ -15,13 +14,6 @@ public class Parent extends User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String firstName;
-    private String lastName;
-
     @ManyToMany
     private Set<Student> children;
-
-
-    @Column(updatable = false)
-    private Long createdTimestamp;
 }

@@ -3,26 +3,24 @@ package com.ednevnik.dnevnik.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.CreationTimestamp;
+import java.util.Set;
 
 @Getter
 @Entity
-@DiscriminatorValue("student")  // Discriminator value for Student
+@DiscriminatorValue("STUDENT")
 public class Student extends User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String firstName;
-    private String lastName;
-    private String grade; // Grade or class
-
     @ManyToOne
-    private School school;
-
-    @ManyToOne
+    @JoinColumn(name = "class_id")
     private Class studentClass;
 
-    @Column(updatable = false)
-    private Long createdTimestamp;
+    @ManyToMany(mappedBy = "children")
+    private Set<Parent> parents;
+
+    public void setStudentClass(Class studentClass) {
+        this.studentClass = studentClass;
+    }
+
+    public void setParents(Set<Parent> parents) {
+        this.parents = parents;
+    }
 }

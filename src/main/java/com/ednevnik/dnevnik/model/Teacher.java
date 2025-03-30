@@ -2,10 +2,11 @@ package com.ednevnik.dnevnik.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-
 @Getter
+@Setter
 @Entity
 @DiscriminatorValue("teacher")
 public class Teacher extends User {
@@ -14,9 +15,7 @@ public class Teacher extends User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String firstName;
-    private String lastName;
-
-    @Column(updatable = false)
-    private Long createdTimestamp;
+    @ManyToOne
+    @JoinColumn(name = "school_id")
+    private School school;
 }

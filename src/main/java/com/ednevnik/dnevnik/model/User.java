@@ -1,16 +1,19 @@
 package com.ednevnik.dnevnik.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
-@Data
-@NoArgsConstructor
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "role_type", discriminatorType = DiscriminatorType.STRING)
 @Table(name = "users")
-public class User {
+public abstract class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -18,11 +21,14 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String password;
+
+    @Column(unique = true)
+    private String nationalId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -31,4 +37,12 @@ public class User {
     private String firstName;
     private String lastName;
     private String phoneNumber;
+
+    @ManyToOne
+    @JoinColumn(name = "school_id", nullable = true)
+    private School school;
+
+    @CreationTimestamp
+    @Column(updatable = false, columnDefinition = "timestamp")
+    private LocalDateTime createdTimestamp;
 }

@@ -60,18 +60,43 @@ public class AdminController {
         return "admin/users/form";
     }
 
-    @PostMapping("/users/new")
-    public String createUser(@ModelAttribute("user") @Valid UserDto userDto,
+    @PostMapping("/users/create")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String createUser(@Valid @ModelAttribute("user") UserDto userDto,
                            BindingResult result,
+                           Model model,
                            RedirectAttributes redirectAttributes) {
-        userValidator.validate(userMapper.toEntity(userDto), result);
-        
         if (result.hasErrors()) {
+            model.addAttribute("schools", schoolRepository.findAll());
             return "admin/users/form";
         }
 
+        // Check for duplicate username
+        if (userRepository.existsByUsername(userDto.getUsername())) {
+            result.rejectValue("username", "error.username", "Username already exists");
+            model.addAttribute("schools", schoolRepository.findAll());
+            return "admin/users/form";
+        }
+
+        // Check for duplicate email
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            result.rejectValue("email", "error.email", "Email already exists");
+            model.addAttribute("schools", schoolRepository.findAll());
+            return "admin/users/form";
+        }
+
+        // Check for duplicate national ID
+        if (userRepository.existsByNationalId(userDto.getNationalId())) {
+            result.rejectValue("nationalId", "error.nationalId", "National ID already exists");
+            model.addAttribute("schools", schoolRepository.findAll());
+            return "admin/users/form";
+        }
+
+        // Encode password
+        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
+
+        // Create user
         User user = userMapper.toEntity(userDto);
-        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
         userRepository.save(user);
 
         redirectAttributes.addFlashAttribute("success", "User created successfully");
