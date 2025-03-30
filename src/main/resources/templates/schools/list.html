@@ -71,11 +71,16 @@
                         <td th:text="${school.director != null ? school.director.firstName + ' ' + school.director.lastName : 'No Director'}">Director</td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a th:href="@{/schools/{id}/edit(id=${school.id})}" 
+                                <a th:if="${currentUserRole == T(com.ednevnik.dnevnik.model.UserRole).ROLE_ADMIN || 
+                                          (currentUserRole == T(com.ednevnik.dnevnik.model.UserRole).ROLE_DIRECTOR && 
+                                           school.director != null && 
+                                           school.director.id == #authentication.principal.user.id)}"
+                                   th:href="@{/schools/{id}/edit(id=${school.id})}" 
                                    class="btn btn-sm btn-primary">Edit</a>
                                 <a th:href="@{/schools/{id}/enrollment(id=${school.id})}" 
                                    class="btn btn-sm btn-info">Manage Staff</a>
-                                <form th:action="@{/schools/{id}/delete(id=${school.id})}"
+                                <form th:if="${currentUserRole == T(com.ednevnik.dnevnik.model.UserRole).ROLE_ADMIN}"
+                                      th:action="@{/schools/{id}/delete(id=${school.id})}"
                                       method="post"
                                       style="display: inline;">
                                     <button type="submit" 

@@ -114,7 +114,7 @@
                                      th:errors="*{email}">Email error</div>
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-3" th:if="${isAdmin}">
                                 <label for="director" class="form-label">Director</label>
                                 <select class="form-select" 
                                         id="director" 
