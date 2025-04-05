@@ -14,6 +14,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.UUID;
+
 @Controller
 @AllArgsConstructor
 @RequestMapping("/api/auth")
@@ -58,9 +60,10 @@ public class AuthController {
                 return "register";
             }
 
-            // Check for duplicate national ID only if provided
-            if (userDto.getNationalId() != null && !userDto.getNationalId().isEmpty() &&
-                userRepository.existsByNationalId(userDto.getNationalId())) {
+            // Set default UUID for nationalId if not provided
+            if (userDto.getNationalId() == null || userDto.getNationalId().isEmpty()) {
+                userDto.setNationalId(UUID.randomUUID().toString());
+            } else if (userRepository.existsByNationalId(userDto.getNationalId())) {
                 result.rejectValue("nationalId", "error.nationalId", "National ID already exists");
                 return "register";
             }
