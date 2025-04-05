@@ -28,6 +28,9 @@ public class UserMapper {
     }
 
     public User toEntity(UserDto dto) {
+        if (dto.getRole() == null) {
+            throw new IllegalArgumentException("Invalid role: " + dto.getRole());
+        }
         User user;
         switch (dto.getRole()) {
             case ROLE_TEACHER:
