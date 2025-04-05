@@ -37,10 +37,10 @@ public class AuthController {
                              Model model,
                              RedirectAttributes redirectAttributes) {
         try {
-
             userDto.setRole(UserRole.ROLE_STUDENT);
-            // Validate the user
-            userValidator.validate(userMapper.toEntity(userDto), result);
+            
+            // Validate the user DTO directly
+            userValidator.validate(userDto, result);
             
             if (result.hasErrors()) {
                 return "register";

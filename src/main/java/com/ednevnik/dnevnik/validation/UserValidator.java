@@ -1,6 +1,6 @@
 package com.ednevnik.dnevnik.validation;
 
-import com.ednevnik.dnevnik.model.User;
+import com.ednevnik.dnevnik.dto.UserDto;
 import com.ednevnik.dnevnik.repository.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -18,35 +18,35 @@ public class UserValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return User.class.equals(clazz);
+        return UserDto.class.equals(clazz);
     }
 
     @Override
     public void validate(Object target, Errors errors) {
-        User user = (User) target;
+        UserDto userDto = (UserDto) target;
 
         // Username validation
         ValidationUtils.rejectIfEmptyOrWhitespace(errors, "username", "field.required", "Username is required");
-        if (user.getUsername() != null && user.getUsername().length() < 3) {
+        if (userDto.getUsername() != null && userDto.getUsername().length() < 3) {
             errors.rejectValue("username", "field.min.length", 
                 "Username must be at least 3 characters long");
         }
-        if (user.getId() == null && userRepository.existsByUsername(user.getUsername())) {
+        if (userDto.getId() == null && userRepository.existsByUsername(userDto.getUsername())) {
             errors.rejectValue("username", "field.duplicate", "Username already exists");
         }
 
         // Email validation
         ValidationUtils.rejectIfEmptyOrWhitespace(errors, "email", "field.required", "Email is required");
-        if (user.getEmail() != null && !user.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+        if (userDto.getEmail() != null && !userDto.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             errors.rejectValue("email", "field.invalid", "Please enter a valid email address");
         }
-        if (user.getId() == null && userRepository.existsByEmail(user.getEmail())) {
+        if (userDto.getId() == null && userRepository.existsByEmail(userDto.getEmail())) {
             errors.rejectValue("email", "field.duplicate", "Email already exists");
         }
 
         // Password validation (only for new users or when password is provided)
-        if (user.getId() == null || (user.getPassword() != null && !user.getPassword().isEmpty())) {
-            if (user.getPassword() == null || user.getPassword().length() < 6) {
+        if (userDto.getId() == null || (userDto.getPassword() != null && !userDto.getPassword().isEmpty())) {
+            if (userDto.getPassword() == null || userDto.getPassword().length() < 6) {
                 errors.rejectValue("password", "field.min.length", 
                     "Password must be at least 6 characters long");
             }
@@ -57,21 +57,21 @@ public class UserValidator implements Validator {
         ValidationUtils.rejectIfEmptyOrWhitespace(errors, "lastName", "field.required", "Last name is required");
 
         // Role validation
-        if (user.getRole() == null) {
+        if (userDto.getRole() == null) {
             errors.rejectValue("role", "field.required", "Role is required");
         }
 
         // Phone number validation (optional)
-        if (user.getPhoneNumber() != null && !user.getPhoneNumber().isEmpty()) {
-            if (!user.getPhoneNumber().matches("^\\+?[0-9]{10,15}$")) {
+        if (userDto.getPhoneNumber() != null && !userDto.getPhoneNumber().isEmpty()) {
+            if (!userDto.getPhoneNumber().matches("^\\+?[0-9]{10,15}$")) {
                 errors.rejectValue("phoneNumber", "field.invalid", 
                     "Please enter a valid phone number (10-15 digits, may start with +)");
             }
         }
 
         // National ID validation (optional but unique if provided)
-        if (user.getNationalId() != null && !user.getNationalId().isEmpty()) {
-            if (user.getId() == null && userRepository.existsByNationalId(user.getNationalId())) {
+        if (userDto.getNationalId() != null && !userDto.getNationalId().isEmpty()) {
+            if (userDto.getId() == null && userRepository.existsByNationalId(userDto.getNationalId())) {
                 errors.rejectValue("nationalId", "field.duplicate", "National ID already exists");
             }
         }

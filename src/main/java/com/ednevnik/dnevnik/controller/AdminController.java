@@ -1,15 +1,15 @@
 package com.ednevnik.dnevnik.controller;
 
 import com.ednevnik.dnevnik.dto.UserDto;
-import com.ednevnik.dnevnik.mapper.UserMapper;
 import com.ednevnik.dnevnik.model.User;
 import com.ednevnik.dnevnik.model.UserRole;
 import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.UserRepository;
+import com.ednevnik.dnevnik.service.UserService;
 import com.ednevnik.dnevnik.validation.UserValidator;
+import com.ednevnik.dnevnik.validation.UserUpdateValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -26,9 +26,9 @@ public class AdminController {
 
     private final UserRepository userRepository;
     private final SchoolRepository schoolRepository;
-    private final UserMapper userMapper;
+    private final UserService userService;
     private final UserValidator userValidator;
-    private final PasswordEncoder passwordEncoder;
+    private final UserUpdateValidator userUpdateValidator;
 
     @GetMapping
     public String showAdminPanel(Model model) {
@@ -47,98 +47,87 @@ public class AdminController {
     @GetMapping("/users/new")
     public String showCreateUserForm(Model model) {
         model.addAttribute("user", new UserDto());
+        model.addAttribute("roles", UserRole.values());
         return "admin/users/form";
     }
 
     @PostMapping("/users/create")
-    @PreAuthorize("hasRole('ADMIN')")
     public String createUser(@Valid @ModelAttribute("user") UserDto userDto,
                            BindingResult result,
                            Model model,
                            RedirectAttributes redirectAttributes) {
+        // Validate using the creation validator
+        userValidator.validate(userDto, result);
+        
         if (result.hasErrors()) {
-            model.addAttribute("schools", schoolRepository.findAll());
+            model.addAttribute("roles", UserRole.values());
             return "admin/users/form";
         }
 
-        // Check for duplicate username
-        if (userRepository.existsByUsername(userDto.getUsername())) {
-            result.rejectValue("username", "error.username", "Username already exists");
-            model.addAttribute("schools", schoolRepository.findAll());
+        try {
+            userService.createUser(userDto);
+            redirectAttributes.addFlashAttribute("success", "User created successfully");
+            return "redirect:/admin/users";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("roles", UserRole.values());
             return "admin/users/form";
         }
-
-        // Check for duplicate email
-        if (userRepository.existsByEmail(userDto.getEmail())) {
-            result.rejectValue("email", "error.email", "Email already exists");
-            model.addAttribute("schools", schoolRepository.findAll());
-            return "admin/users/form";
-        }
-
-        // Check for duplicate national ID
-        if (userRepository.existsByNationalId(userDto.getNationalId())) {
-            result.rejectValue("nationalId", "error.nationalId", "National ID already exists");
-            model.addAttribute("schools", schoolRepository.findAll());
-            return "admin/users/form";
-        }
-
-        // Encode password
-        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
-
-        // Create user
-        User user = userMapper.toEntity(userDto);
-        userRepository.save(user);
-
-        redirectAttributes.addFlashAttribute("success", "User created successfully");
-        return "redirect:/admin/users";
     }
 
     @GetMapping("/users/{id}/edit")
     public String showEditUserForm(@PathVariable Long id, Model model) {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-        model.addAttribute("user", userMapper.toDto(user));
+        
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setUsername(user.getUsername());
+        userDto.setEmail(user.getEmail());
+        userDto.setFirstName(user.getFirstName());
+        userDto.setLastName(user.getLastName());
+        userDto.setNationalId(user.getNationalId());
+        userDto.setPhoneNumber(user.getPhoneNumber());
+        userDto.setRole(user.getRole());
+        
+        model.addAttribute("user", userDto);
+        model.addAttribute("roles", UserRole.values());
         return "admin/users/form";
     }
 
     @PostMapping("/users/{id}/edit")
     public String updateUser(@PathVariable Long id,
-                           @ModelAttribute("user") @Valid UserDto userDto,
+                           @Valid @ModelAttribute("user") UserDto userDto,
                            BindingResult result,
+                           Model model,
                            RedirectAttributes redirectAttributes) {
-        User existingUser = userRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-
-        // Set the ID to ensure we're updating the correct user
-        userDto.setId(id);
-        
-        // Validate the user
-        userValidator.validate(userMapper.toEntity(userDto), result);
+        // Validate using the update validator
+        userUpdateValidator.validate(userDto, result);
         
         if (result.hasErrors()) {
+            model.addAttribute("roles", UserRole.values());
             return "admin/users/form";
         }
 
-        // Update the existing user with the new data
-        userMapper.updateEntityFromDto(existingUser, userDto);
-        
-        // If a new password was provided, encode it
-        if (userDto.getPassword() != null && !userDto.getPassword().trim().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        try {
+            userService.updateUser(id, userDto);
+            redirectAttributes.addFlashAttribute("success", "User updated successfully");
+            return "redirect:/admin/users";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("roles", UserRole.values());
+            return "admin/users/form";
         }
-
-        userRepository.save(existingUser);
-        redirectAttributes.addFlashAttribute("success", "User updated successfully");
-        return "redirect:/admin/users";
     }
 
     @PostMapping("/users/{id}/delete")
     public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        User user = userRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
-        
-        userRepository.delete(user);
-        redirectAttributes.addFlashAttribute("success", "User deleted successfully");
+        try {
+            userService.deleteUser(id);
+            redirectAttributes.addFlashAttribute("success", "User deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/admin/users";
     }
 } 
