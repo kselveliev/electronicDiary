@@ -8,53 +8,7 @@
     <link href="/css/main.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">E-Dnevnik</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/index">Home</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a class="nav-link" href="/admin">Admin Panel</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
-                        <a class="nav-link" href="/schools">Schools</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
-                        <a class="nav-link" href="/subjects">Subjects</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
-                        <a class="nav-link" href="/classes">Classes</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
-                        <a class="nav-link" href="/teacher-assignments">Teacher Assignments</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('TEACHER')">
-                        <a class="nav-link" href="/my-assignments">My Assignments</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('STUDENT')">
-                        <a class="nav-link" href="/my-grades">My Grades</a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('PARENT')">
-                        <a class="nav-link" href="/children">My Children</a>
-                    </li>
-                </ul>
-                <div class="d-flex">
-                    <span class="navbar-text me-3">
-                        Welcome, <span sec:authentication="name">Username</span>
-                    </span>
-                    <form th:action="@{/logout}" method="post">
-                        <button class="btn btn-outline-light" type="submit">Logout</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
 
     <div class="container mt-4">
         <h1 class="mb-4">Welcome to E-Dnevnik</h1>
@@ -79,6 +33,15 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Curriculum Management</h5>
+                        <p class="card-text">Manage school curriculums and subject assignments.</p>
+                        <a href="/curriculum" class="btn btn-primary">Manage Curriculums</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Director Section -->
@@ -87,8 +50,26 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">School Management</h5>
-                        <p class="card-text">Manage your school's details and staff.</p>
-                        <a href="/schools" class="btn btn-primary">Manage School</a>
+                        <p class="card-text">Manage your school's classes and teachers.</p>
+                        <a href="/classes" class="btn btn-primary">Manage Classes</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Teacher Assignments</h5>
+                        <p class="card-text">Assign teachers to subjects and classes.</p>
+                        <a href="/teacher-assignments" class="btn btn-primary">Manage Assignments</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Curriculum Management</h5>
+                        <p class="card-text">Manage school curriculum and subject assignments.</p>
+                        <a href="/curriculum" class="btn btn-primary">Manage Curriculum</a>
                     </div>
                 </div>
             </div>
@@ -96,11 +77,20 @@
 
         <!-- Teacher Section -->
         <div class="row" sec:authorize="hasRole('TEACHER')">
-            <div class="col-md-4 mb-4">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">My Assignments</h5>
+                        <p class="card-text">View your assigned classes and subjects.</p>
+                        <a href="/my-assignments" class="btn btn-primary">View Assignments</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Grade Management</h5>
-                        <p class="card-text">View and manage student grades.</p>
+                        <p class="card-text">Manage student grades for your classes.</p>
                         <a href="/grades" class="btn btn-primary">Manage Grades</a>
                     </div>
                 </div>
@@ -109,11 +99,11 @@
 
         <!-- Student Section -->
         <div class="row" sec:authorize="hasRole('STUDENT')">
-            <div class="col-md-4 mb-4">
+            <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">My Grades</h5>
-                        <p class="card-text">View your academic performance.</p>
+                        <p class="card-text">View your grades for all subjects.</p>
                         <a href="/my-grades" class="btn btn-primary">View Grades</a>
                     </div>
                 </div>
@@ -122,11 +112,11 @@
 
         <!-- Parent Section -->
         <div class="row" sec:authorize="hasRole('PARENT')">
-            <div class="col-md-4 mb-4">
+            <div class="col-md-6 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">My Children</h5>
-                        <p class="card-text">View your children's academic performance.</p>
+                        <p class="card-text">View your children's academic information.</p>
                         <a href="/children" class="btn btn-primary">View Children</a>
                     </div>
                 </div>
