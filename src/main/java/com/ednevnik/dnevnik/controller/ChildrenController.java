@@ -24,7 +24,7 @@ public class ChildrenController {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Parent parent = (Parent) userDetails.getUser();
 
-        Set<Student> children = parentService.getChildren(parent.getId());
+        Set<Student> children = parentService.findChildrenByParentId(parent.getId());
         if (children.isEmpty()) {
             model.addAttribute("message", "No children found in your account.");
         } else {
@@ -40,7 +40,7 @@ public class ChildrenController {
         Parent parent = (Parent) userDetails.getUser();
 
         // This will throw an exception if the child is not found or not associated with the parent
-        parentService.getChildren(parent.getId())
+        parentService.findChildrenByParentId(parent.getId())
                 .stream()
                 .filter(child -> child.getId().equals(childId))
                 .findFirst()

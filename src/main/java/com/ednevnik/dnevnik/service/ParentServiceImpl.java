@@ -4,54 +4,49 @@ import com.ednevnik.dnevnik.model.Parent;
 import com.ednevnik.dnevnik.model.Student;
 import com.ednevnik.dnevnik.repository.ParentRepository;
 import com.ednevnik.dnevnik.repository.StudentRepository;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
+@AllArgsConstructor
 @Service
-@RequiredArgsConstructor
+@Transactional
 public class ParentServiceImpl implements ParentService {
 
     private final ParentRepository parentRepository;
     private final StudentRepository studentRepository;
 
     @Override
-    @Transactional(readOnly = true)
-    public Parent findById(Long id) {
-        return parentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Parent not found"));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Set<Student> getChildren(Long parentId) {
-        Parent parent = findById(parentId);
+    public Set<Student> findChildrenByParentId(Long parentId) {
+        Parent parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
         // Force initialization of the children collection
         parent.getChildren().size();
         return parent.getChildren();
     }
 
     @Override
-    @Transactional
-    public Parent addChild(Long parentId, Long studentId) {
-        Parent parent = findById(parentId);
+    public void assignChildToParent(Long studentId, Long parentId) {
+        Parent parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-        
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+
         parent.getChildren().add(student);
-        return parentRepository.save(parent);
+        parentRepository.save(parent);
     }
 
     @Override
-    @Transactional
-    public Parent removeChild(Long parentId, Long studentId) {
-        Parent parent = findById(parentId);
+    public void removeChildFromParent(Long studentId, Long parentId) {
+        Parent parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-        
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+
         parent.getChildren().remove(student);
-        return parentRepository.save(parent);
+        parentRepository.save(parent);
     }
 } 

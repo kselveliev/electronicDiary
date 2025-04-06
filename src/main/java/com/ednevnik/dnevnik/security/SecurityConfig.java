@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/schools/**").hasAnyRole("ADMIN", "DIRECTOR")
-                .requestMatchers("/grades/**").hasRole("TEACHER")
+                .requestMatchers("/grades/**").hasAnyRole("TEACHER", "PARENT")
                 .requestMatchers("/my-grades/**").hasRole("STUDENT")
                 .requestMatchers("/children/**").hasRole("PARENT")
                 .anyRequest().authenticated()
