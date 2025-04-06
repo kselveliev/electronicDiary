@@ -31,10 +31,13 @@ public class GradeController {
     private final ClassRepository classRepository;
 
     @GetMapping({"/grades", "/my-grades"})
-    public String showGrades(@RequestParam(required = false) Long studentId, Model model, Authentication authentication) {
+    public String showGrades(@RequestParam(required = false) Long studentId,
+                           @RequestParam(required = false) Long classId,
+                           Model model, 
+                           Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         User user = userDetails.getUser();
-        List<GradeDto> grades;
+        List<GradeDto> grades = List.of(); // Initialize as empty list
 
         if (user instanceof Student) {
             grades = gradeService.getGradesForStudent(user.getId());
@@ -42,7 +45,6 @@ public class GradeController {
         } else if (user instanceof Parent) {
             Parent parent = (Parent) user;
             if (parent.getChildren() == null || parent.getChildren().isEmpty()) {
-                grades = List.of();
                 model.addAttribute("message", "No children found in your account.");
             } else if (studentId != null) {
                 // Find the specific child
@@ -59,12 +61,7 @@ public class GradeController {
                 return "redirect:/children";
             }
         } else {
-            // For teachers, admins, and directors, show an empty list initially
-            grades = List.of();
-            model.addAttribute("message", "Please use the search to find a student's grades.");
-            model.addAttribute("showSearch", true);
-
-            // If it's a teacher, only show their assigned subjects and classes
+            // For teachers
             if (user instanceof Teacher) {
                 Teacher teacher = (Teacher) user;
                 List<ClassAssignment> assignments = classAssignmentRepository.findByTeacherId(teacher.getId());
@@ -80,6 +77,32 @@ public class GradeController {
                     .map(ClassAssignment::getSchoolClass)
                     .collect(Collectors.toSet());
                 model.addAttribute("classes", teacherClasses);
+
+                // Get all grades assigned by this teacher
+                grades = gradeRepository.findByTeacherId(teacher.getId()).stream()
+                    .map(grade -> {
+                        GradeDto dto = new GradeDto();
+                        dto.setId(grade.getId());
+                        dto.setGrade(grade.getGrade());
+                        dto.setStudentId(grade.getStudent().getId());
+                        dto.setStudentName(grade.getStudent().getFirstName() + " " + grade.getStudent().getLastName());
+                        dto.setSubjectId(grade.getSubject().getId());
+                        dto.setSubjectName(grade.getSubject().getName());
+                        dto.setTeacherId(grade.getTeacher().getId());
+                        dto.setTeacherName(grade.getTeacher().getFirstName() + " " + grade.getTeacher().getLastName());
+                        dto.setCreatedTimestamp(grade.getCreatedTimestamp());
+                        dto.setClassName(grade.getStudent().getStudentClass().getName());
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+
+                if (grades.isEmpty()) {
+                    model.addAttribute("message", "No grades found. Use the form above to add grades.");
+                }
+            } else {
+                // For admins and directors
+                model.addAttribute("message", "Please use the search to find a student's grades.");
+                model.addAttribute("showSearch", true);
             }
         }
 

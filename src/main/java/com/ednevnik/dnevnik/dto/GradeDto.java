@@ -13,4 +13,5 @@ public class GradeDto {
     private Long teacherId;
     private String teacherName;
     private Long createdTimestamp;
+    private String className;
 } 

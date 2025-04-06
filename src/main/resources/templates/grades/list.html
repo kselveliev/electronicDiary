@@ -21,7 +21,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">E-Dnevnik</a>
+            <a class="navbar-brand" href="/index">School Management System</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -110,46 +110,8 @@
             </a>
         </div>
 
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-header">
-                            <tr>
-                                <th>Subject</th>
-                                <th>Grade</th>
-                                <th>Teacher</th>
-                                <th>Date</th>
-                                <th th:if="${isTeacher || isAdminOrDirector}">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="grade : ${grades}">
-                                <td th:text="${grade.subjectName}">Subject Name</td>
-                                <td class="grade-value" th:text="${grade.grade}">5</td>
-                                <td th:text="${grade.teacherName}">Teacher Name</td>
-                                <td th:text="${#dates.format(new java.util.Date(grade.createdTimestamp), 'dd-MM-yyyy HH:mm')}">Date</td>
-                                <td th:if="${isTeacher || isAdminOrDirector}">
-                                    <form th:action="@{/grades/{id}(id=${grade.id})}" method="post" style="display: inline;">
-                                        <input type="hidden" name="_method" value="DELETE"/>
-                                        <button type="submit" class="btn btn-sm btn-danger" 
-                                                onclick="return confirm('Are you sure you want to delete this grade?')">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <tr th:if="${grades.empty}">
-                                <td colspan="5" class="text-center">No grades found</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
         <!-- Add Grade Form for Teachers -->
-        <div th:if="${isTeacher}" class="card mt-4">
+        <div th:if="${isTeacher}" class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">Add New Grade</h5>
             </div>
@@ -158,7 +120,7 @@
                     <input type="hidden" name="teacherId" th:value="${#authentication.principal.user.id}">
                     <div class="col-md-3">
                         <label for="classId" class="form-label">Class</label>
-                        <select class="form-select" id="classId" name="classId" required>
+                        <select class="form-select" id="classId" required>
                             <option value="">Select Class</option>
                             <option th:each="class : ${classes}"
                                     th:value="${class.id}"
@@ -186,9 +148,49 @@
                                min="2" max="6" required>
                     </div>
                     <div class="col-md-1 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary">Add Grade</button>
+                        <button type="submit" class="btn btn-primary">Add</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Grades Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Class</th>
+                                <th>Student</th>
+                                <th>Grade</th>
+                                <th>Date</th>
+                                <th th:if="${isTeacher || isAdminOrDirector}">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="grade : ${grades}">
+                                <td th:text="${grade.subjectName}">Subject Name</td>
+                                <td th:text="${grade.className}">Class Name</td>
+                                <td th:text="${grade.studentName}">Student Name</td>
+                                <td th:text="${grade.grade}">5</td>
+                                <td th:text="${#dates.format(new java.util.Date(grade.createdTimestamp), 'dd-MM-yyyy HH:mm')}">Date</td>
+                                <td th:if="${isTeacher || isAdminOrDirector}">
+                                    <form th:action="@{/grades/{id}(id=${grade.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Are you sure you want to delete this grade?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${grades.empty}">
+                                <td colspan="6" class="text-center">No grades found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
