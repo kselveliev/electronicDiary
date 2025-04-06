@@ -1,9 +1,15 @@
 package com.ednevnik.dnevnik.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "grades")
 public class Grade {
@@ -23,9 +29,7 @@ public class Grade {
     @ManyToOne
     private Teacher teacher;
 
-
     @Column(updatable = false)
     private Long createdTimestamp;
-
 }
 

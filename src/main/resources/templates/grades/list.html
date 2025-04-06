@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grades</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+    <style>
+        .table-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .grade-value {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">E-Dnevnik</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/index">Home</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/admin">Admin Panel</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/schools">Schools</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('TEACHER')">
+                        <a class="nav-link active" href="/grades">Grades</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('STUDENT')">
+                        <a class="nav-link active" href="/my-grades">My Grades</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('PARENT')">
+                        <a class="nav-link" href="/children">My Children</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">
+                        Welcome, <span sec:authentication="name">Username</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post">
+                        <button class="btn btn-outline-light" type="submit">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="mb-3">
+                    <span th:if="${studentName}" th:text="|${studentName}'s Grades|">Student's Grades</span>
+                    <span th:unless="${studentName}">Grades</span>
+                </h2>
+                
+                <div th:if="${message}" class="alert alert-info" th:text="${message}"></div>
+                
+                <!-- Search form for teachers/admins/directors -->
+                <div th:if="${showSearch}" class="card mb-4">
+                    <div class="card-body">
+                        <form th:action="@{/grades/search}" method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="studentName" placeholder="Student name...">
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" name="subjectId">
+                                    <option value="">All Subjects</option>
+                                    <option th:each="subject : ${subjects}" 
+                                            th:value="${subject.id}" 
+                                            th:text="${subject.name}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary">Search</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to children list for parents -->
+        <div th:if="${studentId != null}" class="mb-3">
+            <a th:href="@{/children}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Children List
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-header">
+                            <tr>
+                                <th>Subject</th>
+                                <th>Grade</th>
+                                <th>Teacher</th>
+                                <th>Date</th>
+                                <th th:if="${isTeacher || isAdminOrDirector}">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="grade : ${grades}">
+                                <td th:text="${grade.subjectName}">Subject Name</td>
+                                <td class="grade-value" th:text="${grade.grade}">5</td>
+                                <td th:text="${grade.teacherName}">Teacher Name</td>
+                                <td th:text="${#dates.format(new java.util.Date(grade.createdTimestamp), 'dd-MM-yyyy HH:mm')}">Date</td>
+                                <td th:if="${isTeacher || isAdminOrDirector}">
+                                    <form th:action="@{/grades/{id}(id=${grade.id})}" method="post" style="display: inline;">
+                                        <input type="hidden" name="_method" value="DELETE"/>
+                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('Are you sure you want to delete this grade?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr th:if="${grades.empty}">
+                                <td colspan="5" class="text-center">No grades found</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Grade Form for Teachers -->
+        <div th:if="${isTeacher}" class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Add New Grade</h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/grades}" method="post" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="studentId" class="form-label">Student</label>
+                        <select class="form-select" id="studentId" name="studentId" required>
+                            <option value="">Select Student</option>
+                            <option th:each="student : ${students}"
+                                    th:value="${student.id}"
+                                    th:text="${student.firstName + ' ' + student.lastName}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="subjectId" class="form-label">Subject</label>
+                        <select class="form-select" id="subjectId" name="subjectId" required>
+                            <option value="">Select Subject</option>
+                            <option th:each="subject : ${subjects}"
+                                    th:value="${subject.id}"
+                                    th:text="${subject.name}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="grade" class="form-label">Grade</label>
+                        <input type="number" class="form-control" id="grade" name="grade" 
+                               min="1" max="5" required>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Add Grade</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

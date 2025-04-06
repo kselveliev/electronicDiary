@@ -134,6 +134,7 @@ class UserMapperTest {
 
     @Test
     void updateEntityFromDtoShouldUpdateAllFields() {
+        when(schoolRepository.findById(1L)).thenReturn(Optional.of(testSchool));
         Teacher existingTeacher = new Teacher();
         existingTeacher.setId(1L);
         existingTeacher.setUsername("olduser");
