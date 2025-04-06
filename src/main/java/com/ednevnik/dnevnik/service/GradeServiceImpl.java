@@ -3,6 +3,9 @@ package com.ednevnik.dnevnik.service;
 import com.ednevnik.dnevnik.dto.GradeDto;
 import com.ednevnik.dnevnik.mapper.GradeMapper;
 import com.ednevnik.dnevnik.model.Grade;
+import com.ednevnik.dnevnik.model.Student;
+import com.ednevnik.dnevnik.model.Subject;
+import com.ednevnik.dnevnik.model.Teacher;
 import com.ednevnik.dnevnik.repository.GradeRepository;
 import com.ednevnik.dnevnik.repository.StudentRepository;
 import com.ednevnik.dnevnik.repository.SubjectRepository;
@@ -39,20 +42,28 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     public GradeDto addGrade(GradeDto gradeDto) {
+        // Validate grade value
+        if (gradeDto.getGrade() < 2 || gradeDto.getGrade() > 6) {
+            throw new IllegalArgumentException("Grade must be between 2 and 6");
+        }
+
+        Student student = studentRepository.findById(gradeDto.getStudentId())
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+            
+        Subject subject = subjectRepository.findById(gradeDto.getSubjectId())
+            .orElseThrow(() -> new RuntimeException("Subject not found"));
+            
+        Teacher teacher = teacherRepository.findById(gradeDto.getTeacherId())
+            .orElseThrow(() -> new RuntimeException("Teacher not found"));
+            
+        // Create a new Grade instance without setting the ID
         Grade grade = new Grade();
         grade.setGrade(gradeDto.getGrade());
-        
-        grade.setStudent(studentRepository.findById(gradeDto.getStudentId())
-                .orElseThrow(() -> new RuntimeException("Student not found")));
-        
-        grade.setSubject(subjectRepository.findById(gradeDto.getSubjectId())
-                .orElseThrow(() -> new RuntimeException("Subject not found")));
-        
-        grade.setTeacher(teacherRepository.findById(gradeDto.getTeacherId())
-                .orElseThrow(() -> new RuntimeException("Teacher not found")));
-
+        grade.setStudent(student);
+        grade.setSubject(subject);
+        grade.setTeacher(teacher);
         grade.setCreatedTimestamp(System.currentTimeMillis());
-        
+            
         Grade savedGrade = gradeRepository.save(grade);
         return gradeMapper.toDto(savedGrade);
     }

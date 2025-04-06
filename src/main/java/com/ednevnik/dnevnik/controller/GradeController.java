@@ -1,8 +1,12 @@
 package com.ednevnik.dnevnik.controller;
 
 import com.ednevnik.dnevnik.dto.GradeDto;
+import com.ednevnik.dnevnik.dto.StudentDto;
 import com.ednevnik.dnevnik.model.*;
 import com.ednevnik.dnevnik.repository.ClassAssignmentRepository;
+import com.ednevnik.dnevnik.repository.StudentRepository;
+import com.ednevnik.dnevnik.repository.GradeRepository;
+import com.ednevnik.dnevnik.repository.ClassRepository;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;
 import com.ednevnik.dnevnik.service.GradeService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Set;
@@ -21,6 +26,9 @@ public class GradeController {
 
     private final GradeService gradeService;
     private final ClassAssignmentRepository classAssignmentRepository;
+    private final StudentRepository studentRepository;
+    private final GradeRepository gradeRepository;
+    private final ClassRepository classRepository;
 
     @GetMapping({"/grades", "/my-grades"})
     public String showGrades(@RequestParam(required = false) Long studentId, Model model, Authentication authentication) {
@@ -50,14 +58,13 @@ public class GradeController {
                 // Redirect to children list if no specific child is selected
                 return "redirect:/children";
             }
-        } else if (user instanceof Teacher || user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR) {
+        } else {
             // For teachers, admins, and directors, show an empty list initially
-            // They will use a search interface to find specific students
             grades = List.of();
             model.addAttribute("message", "Please use the search to find a student's grades.");
             model.addAttribute("showSearch", true);
 
-            // If it's a teacher, only show their assigned subjects and students
+            // If it's a teacher, only show their assigned subjects and classes
             if (user instanceof Teacher) {
                 Teacher teacher = (Teacher) user;
                 List<ClassAssignment> assignments = classAssignmentRepository.findByTeacherId(teacher.getId());
@@ -68,15 +75,12 @@ public class GradeController {
                     .collect(Collectors.toSet());
                 model.addAttribute("subjects", teacherSubjects);
 
-                // Get unique students from assigned classes
-                Set<Student> teacherStudents = assignments.stream()
+                // Get unique classes from assignments
+                Set<com.ednevnik.dnevnik.model.Class> teacherClasses = assignments.stream()
                     .map(ClassAssignment::getSchoolClass)
-                    .flatMap(schoolClass -> schoolClass.getStudents().stream())
                     .collect(Collectors.toSet());
-                model.addAttribute("students", teacherStudents);
+                model.addAttribute("classes", teacherClasses);
             }
-        } else {
-            throw new RuntimeException("Unauthorized access");
         }
 
         model.addAttribute("grades", grades);
@@ -126,61 +130,111 @@ public class GradeController {
     }
 
     @PostMapping("/grades")
-    @ResponseBody
-    public GradeDto addGrade(@RequestBody GradeDto gradeDto, Authentication authentication) {
+    public String addGrade(@RequestParam Long studentId, 
+                          @RequestParam Long subjectId, 
+                          @RequestParam Integer grade,
+                          @RequestParam Long teacherId,
+                          Authentication authentication,
+                          RedirectAttributes redirectAttributes) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         User user = userDetails.getUser();
         
-        // Check if user is admin or director
-        if (user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR) {
-            return gradeService.addGrade(gradeDto);
-        }
+        // Create a GradeDto from the form data
+        GradeDto gradeDto = new GradeDto();
+        gradeDto.setStudentId(studentId);
+        gradeDto.setSubjectId(subjectId);
+        gradeDto.setGrade(grade);
+        gradeDto.setTeacherId(teacherId);
         
-        // Check if user is a teacher and teaches the student
-        if (user instanceof Teacher) {
-            Teacher teacher = (Teacher) user;
-            // Verify if the teacher is assigned to the student's class/subject
-            if (isTeacherAuthorizedForStudent(teacher, gradeDto.getStudentId())) {
-                return gradeService.addGrade(gradeDto);
+        try {
+            // Check if user is admin or director
+            if (user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR) {
+                gradeService.addGrade(gradeDto);
+                redirectAttributes.addFlashAttribute("success", "Grade added successfully");
             }
+            // Check if user is a teacher and teaches the student
+            else if (user instanceof Teacher) {
+                Teacher teacher = (Teacher) user;
+                // Verify if the teacher is assigned to the student's class/subject
+                if (isTeacherAuthorizedForStudent(teacher, studentId)) {
+                    gradeService.addGrade(gradeDto);
+                    redirectAttributes.addFlashAttribute("success", "Grade added successfully");
+                } else {
+                    redirectAttributes.addFlashAttribute("error", "You are not authorized to add grades for this student");
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Unauthorized: Only teachers of the student, directors, or admins can add grades");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error adding grade: " + e.getMessage());
         }
         
-        throw new RuntimeException("Unauthorized: Only teachers of the student, directors, or admins can add grades");
+        return "redirect:/grades";
     }
 
-    @DeleteMapping("/grades/{id}")
-    @ResponseBody
-    public void deleteGrade(@PathVariable Long id, Authentication authentication) {
+    @PostMapping("/grades/{id}")
+    public String deleteGrade(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         User user = userDetails.getUser();
         
-        // Check if user is admin or director
-        if (user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR) {
-            gradeService.deleteGrade(id);
-            return;
-        }
-        
-        // Check if user is a teacher and owns the grade
-        if (user instanceof Teacher) {
-            Teacher teacher = (Teacher) user;
-            if (isTeacherAuthorizedForGrade(teacher, id)) {
+        try {
+            // Check if user is admin or director
+            if (user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR) {
                 gradeService.deleteGrade(id);
-                return;
+                redirectAttributes.addFlashAttribute("success", "Grade deleted successfully");
             }
+            // Check if user is a teacher and owns the grade
+            else if (user instanceof Teacher) {
+                Teacher teacher = (Teacher) user;
+                if (isTeacherAuthorizedForGrade(teacher, id)) {
+                    gradeService.deleteGrade(id);
+                    redirectAttributes.addFlashAttribute("success", "Grade deleted successfully");
+                } else {
+                    redirectAttributes.addFlashAttribute("error", "You are not authorized to delete this grade");
+                }
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Unauthorized: Only the teacher who created the grade, directors, or admins can delete grades");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error deleting grade: " + e.getMessage());
         }
         
-        throw new RuntimeException("Unauthorized: Only the teacher who created the grade, directors, or admins can delete grades");
+        return "redirect:/grades";
     }
 
     private boolean isTeacherAuthorizedForStudent(Teacher teacher, Long studentId) {
-        // TODO: Implement logic to check if teacher is assigned to student's class/subject
-        // This could involve checking teacher's subjects, classes, or direct student assignments
-        return true; // Placeholder implementation
+        // Get all class assignments for the teacher
+        List<ClassAssignment> teacherAssignments = classAssignmentRepository.findByTeacherId(teacher.getId());
+        
+        // Get the student
+        Student student = studentRepository.findById(studentId)
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+            
+        // Check if the student is in any of the teacher's assigned classes
+        return teacherAssignments.stream()
+            .map(ClassAssignment::getSchoolClass)
+            .anyMatch(schoolClass -> schoolClass.getStudents().contains(student));
     }
 
     private boolean isTeacherAuthorizedForGrade(Teacher teacher, Long gradeId) {
-        // TODO: Implement logic to check if teacher created the grade
-        // This could involve checking the grade's teacher ID against the current teacher
-        return true; // Placeholder implementation
+        // Get the grade
+        Grade grade = gradeRepository.findById(gradeId)
+            .orElseThrow(() -> new RuntimeException("Grade not found"));
+            
+        // Check if the teacher created the grade
+        return grade.getTeacher().getId().equals(teacher.getId());
+    }
+
+    @GetMapping("/grades/students-by-class/{classId}")
+    @ResponseBody
+    public List<StudentDto> getStudentsByClass(@PathVariable Long classId) {
+        // Get the class
+        com.ednevnik.dnevnik.model.Class schoolClass = classRepository.findById(classId)
+            .orElseThrow(() -> new RuntimeException("Class not found"));
+            
+        // Get students from the class
+        return schoolClass.getStudents().stream()
+            .map(student -> new StudentDto(student.getId(), student.getFirstName(), student.getLastName()))
+            .collect(Collectors.toList());
     }
 } 

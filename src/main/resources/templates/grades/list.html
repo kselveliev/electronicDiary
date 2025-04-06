@@ -36,6 +36,15 @@
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
                         <a class="nav-link" href="/schools">Schools</a>
                     </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/subjects">Subjects</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/classes">Classes</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/teacher-assignments">Teacher Assignments</a>
+                    </li>
                     <li class="nav-item" sec:authorize="hasRole('TEACHER')">
                         <a class="nav-link active" href="/grades">Grades</a>
                     </li>
@@ -67,6 +76,8 @@
                 </h2>
                 
                 <div th:if="${message}" class="alert alert-info" th:text="${message}"></div>
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
                 
                 <!-- Search form for teachers/admins/directors -->
                 <div th:if="${showSearch}" class="card mb-4">
@@ -144,13 +155,20 @@
             </div>
             <div class="card-body">
                 <form th:action="@{/grades}" method="post" class="row g-3">
+                    <input type="hidden" name="teacherId" th:value="${#authentication.principal.user.id}">
+                    <div class="col-md-3">
+                        <label for="classId" class="form-label">Class</label>
+                        <select class="form-select" id="classId" name="classId" required>
+                            <option value="">Select Class</option>
+                            <option th:each="class : ${classes}"
+                                    th:value="${class.id}"
+                                    th:text="${class.name}"></option>
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <label for="studentId" class="form-label">Student</label>
-                        <select class="form-select" id="studentId" name="studentId" required>
+                        <select class="form-select" id="studentId" name="studentId" required disabled>
                             <option value="">Select Student</option>
-                            <option th:each="student : ${students}"
-                                    th:value="${student.id}"
-                                    th:text="${student.firstName + ' ' + student.lastName}"></option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -165,9 +183,9 @@
                     <div class="col-md-2">
                         <label for="grade" class="form-label">Grade</label>
                         <input type="number" class="form-control" id="grade" name="grade" 
-                               min="1" max="5" required>
+                               min="2" max="6" required>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
+                    <div class="col-md-1 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary">Add Grade</button>
                     </div>
                 </form>
@@ -176,5 +194,36 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('classId').addEventListener('change', function() {
+            const classId = this.value;
+            const studentSelect = document.getElementById('studentId');
+            
+            // Clear and disable student dropdown if no class is selected
+            if (!classId) {
+                studentSelect.innerHTML = '<option value="">Select Student</option>';
+                studentSelect.disabled = true;
+                return;
+            }
+            
+            // Fetch students for the selected class
+            fetch(`/grades/students-by-class/${classId}`)
+                .then(response => response.json())
+                .then(students => {
+                    studentSelect.innerHTML = '<option value="">Select Student</option>';
+                    students.forEach(student => {
+                        const option = document.createElement('option');
+                        option.value = student.id;
+                        option.textContent = `${student.firstName} ${student.lastName}`;
+                        studentSelect.appendChild(option);
+                    });
+                    studentSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching students:', error);
+                    studentSelect.innerHTML = '<option value="">Error loading students</option>';
+                });
+        });
+    </script>
 </body>
 </html> 
