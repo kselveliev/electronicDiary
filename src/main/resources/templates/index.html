@@ -25,8 +25,17 @@
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
                         <a class="nav-link" href="/schools">Schools</a>
                     </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/subjects">Subjects</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/classes">Classes</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/teacher-assignments">Teacher Assignments</a>
+                    </li>
                     <li class="nav-item" sec:authorize="hasRole('TEACHER')">
-                        <a class="nav-link" href="/grades">Grades</a>
+                        <a class="nav-link" href="/my-assignments">My Assignments</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('STUDENT')">
                         <a class="nav-link" href="/my-grades">My Grades</a>

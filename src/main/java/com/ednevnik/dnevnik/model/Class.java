@@ -31,4 +31,7 @@ public class Class {
 
     @OneToMany(mappedBy = "studentClass")
     private Set<Student> students;
+
+    @Column(updatable = false)
+    private Long createdTimestamp;
 }

@@ -2,8 +2,10 @@ package com.ednevnik.dnevnik.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @Entity
 @Table(name = "subjects")
 public class Subject {
