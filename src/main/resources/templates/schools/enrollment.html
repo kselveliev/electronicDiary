@@ -25,6 +25,12 @@
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
                         <a class="nav-link" href="/schools">Schools</a>
                     </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" href="/teacher-assignments">Teacher Assignments</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('TEACHER')">
+                        <a class="nav-link" href="/my-assignments">My Assignments</a>
+                    </li>
                 </ul>
                 <div class="d-flex">
                     <span class="navbar-text me-3">
@@ -68,6 +74,7 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Email</th>
+                                        <th>School</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -75,6 +82,7 @@
                                     <tr th:each="teacher : ${schoolTeachers}">
                                         <td th:text="${teacher.firstName + ' ' + teacher.lastName}">Teacher Name</td>
                                         <td th:text="${teacher.email}">Email</td>
+                                        <td th:text="${school.name}">School Name</td>
                                         <td>
                                             <form th:action="@{/schools/{schoolId}/remove-teacher(schoolId=${school.id})}" 
                                                   method="post" style="display: inline;">
@@ -87,7 +95,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(schoolTeachers)}">
-                                        <td colspan="3" class="text-center">No teachers assigned to this school</td>
+                                        <td colspan="4" class="text-center">No teachers assigned to this school</td>
                                     </tr>
                                 </tbody>
                             </table>

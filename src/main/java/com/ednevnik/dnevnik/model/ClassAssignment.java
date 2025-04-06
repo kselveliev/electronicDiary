@@ -2,8 +2,10 @@ package com.ednevnik.dnevnik.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @Entity
 public class ClassAssignment {
 
@@ -21,8 +23,7 @@ public class ClassAssignment {
 
     @ManyToOne
     @JoinColumn(name = "class_id", nullable = false)
-    private Class schoolClass;  // Link to the class entity
-
+    private Class schoolClass;
 
     @Column(updatable = false)
     private Long createdTimestamp;

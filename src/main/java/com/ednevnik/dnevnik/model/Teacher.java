@@ -13,8 +13,4 @@ public class Teacher extends User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "school_id")
-    private School school;
 }

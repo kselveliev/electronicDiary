@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @Entity
@@ -26,4 +28,7 @@ public class Class {
     @ManyToOne
     @JoinColumn(name = "class_teacher_id", nullable = false)
     private Teacher classTeacher;
+
+    @OneToMany(mappedBy = "studentClass")
+    private Set<Student> students;
 }

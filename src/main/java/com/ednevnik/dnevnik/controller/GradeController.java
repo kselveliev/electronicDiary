@@ -2,6 +2,7 @@ package com.ednevnik.dnevnik.controller;
 
 import com.ednevnik.dnevnik.dto.GradeDto;
 import com.ednevnik.dnevnik.model.*;
+import com.ednevnik.dnevnik.repository.ClassAssignmentRepository;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;
 import com.ednevnik.dnevnik.service.GradeService;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +12,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
 public class GradeController {
 
     private final GradeService gradeService;
+    private final ClassAssignmentRepository classAssignmentRepository;
 
     @GetMapping({"/grades", "/my-grades"})
     public String showGrades(@RequestParam(required = false) Long studentId, Model model, Authentication authentication) {
@@ -52,6 +56,25 @@ public class GradeController {
             grades = List.of();
             model.addAttribute("message", "Please use the search to find a student's grades.");
             model.addAttribute("showSearch", true);
+
+            // If it's a teacher, only show their assigned subjects and students
+            if (user instanceof Teacher) {
+                Teacher teacher = (Teacher) user;
+                List<ClassAssignment> assignments = classAssignmentRepository.findByTeacherId(teacher.getId());
+                
+                // Get unique subjects from assignments
+                Set<Subject> teacherSubjects = assignments.stream()
+                    .map(ClassAssignment::getSubject)
+                    .collect(Collectors.toSet());
+                model.addAttribute("subjects", teacherSubjects);
+
+                // Get unique students from assigned classes
+                Set<Student> teacherStudents = assignments.stream()
+                    .map(ClassAssignment::getSchoolClass)
+                    .flatMap(schoolClass -> schoolClass.getStudents().stream())
+                    .collect(Collectors.toSet());
+                model.addAttribute("students", teacherStudents);
+            }
         } else {
             throw new RuntimeException("Unauthorized access");
         }
