@@ -33,6 +33,7 @@ public class GradeController {
     @GetMapping({"/grades", "/my-grades"})
     public String showGrades(@RequestParam(required = false) Long studentId,
                            @RequestParam(required = false) Long classId,
+                           @RequestParam(required = false) Long subjectId,
                            Model model, 
                            Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -79,7 +80,37 @@ public class GradeController {
                 model.addAttribute("classes", teacherClasses);
 
                 // Get all grades assigned by this teacher
-                grades = gradeRepository.findByTeacherId(teacher.getId()).stream()
+                List<Grade> teacherGrades = gradeRepository.findByTeacherId(teacher.getId());
+                
+                // Apply filters if provided
+                if (classId != null) {
+                    teacherGrades = teacherGrades.stream()
+                        .filter(grade -> grade.getStudent().getStudentClass().getId().equals(classId))
+                        .collect(Collectors.toList());
+                    model.addAttribute("selectedClassId", classId);
+                    
+                    // Load students for the selected class
+                    com.ednevnik.dnevnik.model.Class selectedClass = classRepository.findById(classId)
+                        .orElseThrow(() -> new RuntimeException("Class not found"));
+                    model.addAttribute("students", selectedClass.getStudents());
+                }
+                
+                if (studentId != null) {
+                    teacherGrades = teacherGrades.stream()
+                        .filter(grade -> grade.getStudent().getId().equals(studentId))
+                        .collect(Collectors.toList());
+                    model.addAttribute("selectedStudentId", studentId);
+                }
+                
+                if (subjectId != null) {
+                    teacherGrades = teacherGrades.stream()
+                        .filter(grade -> grade.getSubject().getId().equals(subjectId))
+                        .collect(Collectors.toList());
+                    model.addAttribute("selectedSubjectId", subjectId);
+                }
+
+                // Convert filtered grades to DTOs
+                grades = teacherGrades.stream()
                     .map(grade -> {
                         GradeDto dto = new GradeDto();
                         dto.setId(grade.getId());
@@ -97,7 +128,7 @@ public class GradeController {
                     .collect(Collectors.toList());
 
                 if (grades.isEmpty()) {
-                    model.addAttribute("message", "No grades found. Use the form above to add grades.");
+                    model.addAttribute("message", "No grades found matching the selected filters.");
                 }
             } else {
                 // For admins and directors
@@ -110,6 +141,15 @@ public class GradeController {
         model.addAttribute("isTeacher", user instanceof Teacher);
         model.addAttribute("isAdminOrDirector", user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR);
         return "grades/list";
+    }
+
+    @GetMapping("/grades/filter")
+    public String filterGrades(@RequestParam(required = false) Long classId,
+                             @RequestParam(required = false) Long studentId,
+                             @RequestParam(required = false) Long subjectId,
+                             Model model,
+                             Authentication authentication) {
+        return showGrades(studentId, classId, subjectId, model, authentication);
     }
 
     @GetMapping({"/grades/subject/{subjectId}", "/my-grades/subject/{subjectId}"})
