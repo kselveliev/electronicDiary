@@ -28,6 +28,8 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/schools/**").hasAnyRole("ADMIN", "DIRECTOR")
+                .requestMatchers("/curriculum/new", "/curriculum/*/edit", "/curriculum/*/update", "/curriculum/*/subjects", "/curriculum/*/subjects/*/remove", "/curriculum/*/toggle-active").hasAnyRole("ADMIN", "DIRECTOR")
+                .requestMatchers("/curriculum/**").authenticated()
                 .requestMatchers("/grades/**").hasAnyRole("TEACHER", "PARENT")
                 .requestMatchers("/my-grades/**").hasRole("STUDENT")
                 .requestMatchers("/children/**").hasRole("PARENT")

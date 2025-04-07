@@ -51,11 +51,18 @@
                                 </p>
                             </div>
                         </div>
+                        <div th:if="${canEdit}">
+                            <form th:action="@{/curriculum/{id}/toggle-active(id=${curriculum.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn" th:classappend="${curriculum.active ? 'btn-danger' : 'btn-success'}">
+                                    <span th:text="${curriculum.active ? 'Deactivate' : 'Activate'}">Toggle Status</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Add Subject Form -->
-                <div class="card mb-4">
+                <div class="card mb-4" th:if="${canEdit}">
                     <div class="card-header">
                         <h5 class="mb-0">Add Subject to Schedule</h5>
                     </div>
@@ -150,11 +157,11 @@
                                                      th:if="${subject.schoolClass.id == class.id and subject.dayOfWeek == day and subject.lessonNumber == lesson}">
                                                     <strong th:text="${class.name + ': ' + subject.subject.name}">Class: Subject</strong><br>
                                                     <small th:text="${subject.teacher.firstName + ' ' + subject.teacher.lastName}">Teacher</small>
-                                                    <form th:action="@{/curriculum/{curriculumId}/subjects/{subjectId}/remove(curriculumId=${curriculum.id},subjectId=${subject.id})}"
-                                                          method="post" 
-                                                          style="display: inline;">
+                                                    <form th:if="${canEdit}" 
+                                                          th:action="@{/curriculum/{curriculumId}/subjects/{subjectId}/remove(curriculumId=${curriculum.id},subjectId=${subject.id})}" 
+                                                          method="post" class="d-inline">
                                                         <button type="submit" 
-                                                                class="btn btn-danger btn-sm mt-1"
+                                                                class="btn btn-danger btn-sm float-right"
                                                                 onclick="return confirm('Are you sure you want to remove this lesson?')">
                                                             Remove
                                                         </button>

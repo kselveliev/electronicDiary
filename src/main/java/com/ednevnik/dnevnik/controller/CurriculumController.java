@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,7 +21,6 @@ import java.util.stream.Collectors;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/curriculum")
-@PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
 public class CurriculumController {
 
     private final CurriculumRepository curriculumRepository;
@@ -31,22 +31,40 @@ public class CurriculumController {
     private final ClassRepository classRepository;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public String listCurriculums(Model model, Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         User user = userDetails.getUser();
         
         if (user.getRole() == UserRole.ROLE_ADMIN) {
             model.addAttribute("curriculums", curriculumRepository.findAll());
-        } else {
+        } else if (user.getRole() == UserRole.ROLE_DIRECTOR) {
             // For directors, show only their school's curriculums
             Director director = (Director) user;
             model.addAttribute("curriculums", curriculumRepository.findBySchoolId(director.getSchool().getId()));
+        } else if (user.getRole() == UserRole.ROLE_TEACHER) {
+            // For teachers, show curriculums for their school
+            Teacher teacher = (Teacher) user;
+            model.addAttribute("curriculums", curriculumRepository.findBySchoolId(teacher.getSchool().getId()));
+        } else if (user.getRole() == UserRole.ROLE_STUDENT) {
+            // For students, show curriculums for their school
+            Student student = (Student) user;
+            model.addAttribute("curriculums", curriculumRepository.findBySchoolId(student.getStudentClass().getSchool().getId()));
+        } else if (user.getRole() == UserRole.ROLE_PARENT) {
+            // For parents, show curriculums for their children's school
+            Parent parent = (Parent) user;
+            if (!parent.getChildren().isEmpty()) {
+                Student child = parent.getChildren().iterator().next();
+                model.addAttribute("curriculums", curriculumRepository.findBySchoolId(child.getStudentClass().getSchool().getId()));
+            }
         }
         
+        model.addAttribute("canEdit", user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR);
         return "curriculum/list";
     }
 
     @GetMapping("/new")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public String showNewCurriculumForm(Model model, Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         User user = userDetails.getUser();
@@ -62,6 +80,7 @@ public class CurriculumController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public String createCurriculum(@RequestParam String name,
                                  @RequestParam String startDate,
                                  @RequestParam String endDate,
@@ -86,9 +105,39 @@ public class CurriculumController {
     }
 
     @GetMapping("/{id}")
-    public String showCurriculum(@PathVariable Long id, Model model) {
+    @PreAuthorize("isAuthenticated()")
+    public String showCurriculum(@PathVariable Long id, Model model, Authentication authentication) {
         Curriculum curriculum = curriculumRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Curriculum not found"));
+        
+        // Check if the user has access to this curriculum
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User user = userDetails.getUser();
+        
+        boolean hasAccess = false;
+        
+        if (user.getRole() == UserRole.ROLE_ADMIN) {
+            hasAccess = true;
+        } else if (user.getRole() == UserRole.ROLE_DIRECTOR) {
+            Director director = (Director) user;
+            hasAccess = director.getSchool().getId().equals(curriculum.getSchool().getId());
+        } else if (user.getRole() == UserRole.ROLE_TEACHER) {
+            Teacher teacher = (Teacher) user;
+            hasAccess = teacher.getSchool().getId().equals(curriculum.getSchool().getId());
+        } else if (user.getRole() == UserRole.ROLE_STUDENT) {
+            Student student = (Student) user;
+            hasAccess = student.getStudentClass().getSchool().getId().equals(curriculum.getSchool().getId());
+        } else if (user.getRole() == UserRole.ROLE_PARENT) {
+            Parent parent = (Parent) user;
+            if (!parent.getChildren().isEmpty()) {
+                Student child = parent.getChildren().iterator().next();
+                hasAccess = child.getStudentClass().getSchool().getId().equals(curriculum.getSchool().getId());
+            }
+        }
+        
+        if (!hasAccess) {
+            throw new RuntimeException("You don't have access to this curriculum");
+        }
         
         // Get all classes for the school
         List<com.ednevnik.dnevnik.model.Class> allClasses = classRepository.findBySchoolId(curriculum.getSchool().getId());
@@ -102,8 +151,107 @@ public class CurriculumController {
         model.addAttribute("teachers", teacherRepository.findBySchoolId(curriculum.getSchool().getId()));
         model.addAttribute("classesByGrade", classesByGrade);
         model.addAttribute("curriculumSubjects", curriculumSubjectRepository.findByCurriculumId(id));
+        model.addAttribute("canEdit", user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR);
         
         return "curriculum/details";
+    }
+
+    @GetMapping("/{id}/edit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
+    public String editCurriculum(@PathVariable Long id, Model model, Authentication authentication) {
+        Curriculum curriculum = curriculumRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Curriculum not found"));
+        
+        // Check if the user has access to this curriculum
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User user = userDetails.getUser();
+        
+        boolean hasAccess = false;
+        
+        if (user.getRole() == UserRole.ROLE_ADMIN) {
+            hasAccess = true;
+        } else if (user.getRole() == UserRole.ROLE_DIRECTOR) {
+            Director director = (Director) user;
+            hasAccess = director.getSchool().getId().equals(curriculum.getSchool().getId());
+        }
+        
+        if (!hasAccess) {
+            throw new RuntimeException("You don't have access to edit this curriculum");
+        }
+        
+        model.addAttribute("curriculum", curriculum);
+        model.addAttribute("schools", schoolRepository.findAll());
+        
+        return "curriculum/edit";
+    }
+    
+    @PostMapping("/{id}/update")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
+    public String updateCurriculum(@PathVariable Long id,
+                                 @RequestParam String name,
+                                 @RequestParam String startDate,
+                                 @RequestParam String endDate,
+                                 @RequestParam Long schoolId,
+                                 @RequestParam(required = false) Boolean active,
+                                 RedirectAttributes redirectAttributes,
+                                 Authentication authentication) {
+        try {
+            Curriculum curriculum = curriculumRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Curriculum not found"));
+            
+            // Check if the user has access to this curriculum
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User user = userDetails.getUser();
+            
+            boolean hasAccess = false;
+            
+            if (user.getRole() == UserRole.ROLE_ADMIN) {
+                hasAccess = true;
+            } else if (user.getRole() == UserRole.ROLE_DIRECTOR) {
+                Director director = (Director) user;
+                hasAccess = director.getSchool().getId().equals(curriculum.getSchool().getId());
+            }
+            
+            if (!hasAccess) {
+                throw new RuntimeException("You don't have access to edit this curriculum");
+            }
+            
+            // Parse dates
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate parsedStartDate = LocalDate.parse(startDate, formatter);
+            LocalDate parsedEndDate = LocalDate.parse(endDate, formatter);
+            
+            // Validate dates
+            if (parsedEndDate.isBefore(parsedStartDate)) {
+                redirectAttributes.addFlashAttribute("error", "End date cannot be before start date");
+                return "redirect:/curriculum/" + id + "/edit";
+            }
+            
+            // Update curriculum
+            curriculum.setName(name);
+            curriculum.setStartDate(parsedStartDate);
+            curriculum.setEndDate(parsedEndDate);
+            
+            // Only admin can change the school
+            if (user.getRole() == UserRole.ROLE_ADMIN) {
+                School school = schoolRepository.findById(schoolId)
+                        .orElseThrow(() -> new RuntimeException("School not found"));
+                curriculum.setSchool(school);
+            }
+            
+            // Update active status if provided
+            if (active != null) {
+                curriculum.setActive(active);
+            }
+            
+            curriculumRepository.save(curriculum);
+            
+            redirectAttributes.addFlashAttribute("success", "Curriculum updated successfully");
+            return "redirect:/curriculum";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error updating curriculum: " + e.getMessage());
+            return "redirect:/curriculum/" + id + "/edit";
+        }
     }
 
     /**
@@ -119,6 +267,7 @@ public class CurriculumController {
     }
 
     @PostMapping("/{id}/subjects")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public String addSubjectToCurriculum(@PathVariable Long id,
                                        @RequestParam Long subjectId,
                                        @RequestParam Long teacherId,
@@ -162,6 +311,7 @@ public class CurriculumController {
     }
 
     @PostMapping("/{curriculumId}/subjects/{subjectId}/remove")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public String removeSubjectFromCurriculum(@PathVariable Long curriculumId,
                                             @PathVariable Long subjectId,
                                             RedirectAttributes redirectAttributes) {
@@ -179,6 +329,7 @@ public class CurriculumController {
     }
 
     @PostMapping("/{id}/toggle-active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public String toggleCurriculumActive(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             Curriculum curriculum = curriculumRepository.findById(id)
