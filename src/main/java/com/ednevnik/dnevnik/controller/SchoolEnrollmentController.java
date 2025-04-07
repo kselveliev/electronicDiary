@@ -5,6 +5,7 @@ import com.ednevnik.dnevnik.model.User;
 import com.ednevnik.dnevnik.model.UserRole;
 import com.ednevnik.dnevnik.model.Teacher;
 import com.ednevnik.dnevnik.model.Student;
+import com.ednevnik.dnevnik.model.Director;
 import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.UserRepository;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;
@@ -36,9 +37,11 @@ public class SchoolEnrollmentController {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User currentUser = userDetails.getUser();
 
-        if (currentUser.getRole() == UserRole.ROLE_DIRECTOR && 
-            (school.getDirector() == null || !school.getDirector().getId().equals(currentUser.getId()))) {
-            throw new RuntimeException("Access denied");
+        if (currentUser.getRole() == UserRole.ROLE_DIRECTOR) {
+            Director director = (Director) currentUser;
+            if (director.getSchool() == null || !director.getSchool().getId().equals(school.getId())) {
+                throw new RuntimeException("Access denied. You are not the director of this school.");
+            }
         }
 
         // Get teachers and students for this school
