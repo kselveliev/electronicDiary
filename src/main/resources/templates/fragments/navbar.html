@@ -38,13 +38,25 @@
                         <a class="nav-link" href="/my-assignments">My Assignments</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('TEACHER')">
+                        <a class="nav-link" href="/attendance">Take Attendance</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('TEACHER')">
+                        <a class="nav-link" href="/attendance/class-view">View Attendance</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('TEACHER')">
                         <a class="nav-link" href="/grades">Grades</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('STUDENT')">
                         <a class="nav-link" href="/my-grades">My Grades</a>
                     </li>
+                    <li class="nav-item" sec:authorize="hasRole('STUDENT')">
+                        <a class="nav-link" href="/attendance/my-attendance">My Attendance</a>
+                    </li>
                     <li class="nav-item" sec:authorize="hasRole('PARENT')">
                         <a class="nav-link" href="/children">My Children</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('PARENT')">
+                        <a class="nav-link" href="/attendance/children-attendance">Children's Attendance</a>
                     </li>
                 </ul>
                 <div class="d-flex">

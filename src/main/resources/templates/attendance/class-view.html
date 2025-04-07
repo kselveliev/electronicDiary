@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Attendance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-10 offset-md-1">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Class Attendance</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Class and Subject Selection Form -->
+                        <form th:action="@{/attendance/class-view}" method="get" class="mb-4">
+                            <div class="row g-3">
+                                <div class="col-md-5">
+                                    <label for="classId" class="form-label">Select Class:</label>
+                                    <select class="form-select" id="classId" name="classId" onchange="this.form.submit()">
+                                        <option value="">Choose a class...</option>
+                                        <option th:each="class : ${classes}"
+                                                th:value="${class.id}"
+                                                th:text="${class.name}"
+                                                th:selected="${selectedClass != null && selectedClass.id == class.id}">
+                                            Class Name
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5" th:if="${selectedClass != null}">
+                                    <label for="subjectId" class="form-label">Select Subject:</label>
+                                    <select class="form-select" id="subjectId" name="subjectId" onchange="this.form.submit()">
+                                        <option value="">Choose a subject...</option>
+                                        <option th:each="subject : ${subjects}"
+                                                th:value="${subject.id}"
+                                                th:text="${subject.name}"
+                                                th:selected="${selectedSubject != null && selectedSubject.id == subject.id}">
+                                            Subject Name
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Attendance Records Table -->
+                        <div th:if="${selectedClass != null && selectedSubject != null}" class="table-responsive">
+                            <h4 class="mb-3">
+                                Attendance Records for 
+                                <span th:text="${selectedClass.name}">Class Name</span> - 
+                                <span th:text="${selectedSubject.name}">Subject Name</span>
+                            </h4>
+                            
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Student</th>
+                                        <th>Lesson</th>
+                                        <th>Status</th>
+                                        <th>Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="attendance : ${attendances}">
+                                        <td th:text="${#dates.format(new java.util.Date(attendance.createdTimestamp), 'dd-MM-yyyy')}">01-01-2024</td>
+                                        <td th:text="${attendance.student.firstName + ' ' + attendance.student.lastName}">Student Name</td>
+                                        <td th:text="${attendance.lessonNumber + '. lesson'}">1. lesson</td>
+                                        <td>
+                                            <span th:if="${attendance.present}" class="badge bg-success">Present</span>
+                                            <span th:unless="${attendance.present}" class="badge bg-danger">Absent</span>
+                                        </td>
+                                        <td th:text="${attendance.note}">Note</td>
+                                    </tr>
+                                    <tr th:if="${attendances == null || attendances.empty}">
+                                        <td colspan="5" class="text-center">No attendance records found</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- Summary Section -->
+                            <div th:if="${attendances != null && !attendances.empty}" class="mt-4">
+                                <h5>Summary</h5>
+                                <p>
+                                    Total Records: <span th:text="${attendances.size()}">0</span><br>
+                                    Absent Students: <span th:text="${attendances.?[!present].size()}">0</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
