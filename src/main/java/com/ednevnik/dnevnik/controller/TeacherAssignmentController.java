@@ -14,6 +14,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/teacher-assignments")
 @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
@@ -38,7 +40,9 @@ public class TeacherAssignmentController {
         
         model.addAttribute("teacher", teacher);
         model.addAttribute("subjects", subjectRepository.findAll());
-        model.addAttribute("classes", classRepository.findAll());
+        model.addAttribute("classes", teacher.getSchool() != null ? 
+            classRepository.findBySchoolId(teacher.getSchool().getId()) : 
+            List.of());
         model.addAttribute("assignments", classAssignmentRepository.findByTeacherId(teacherId));
         return "teacher-assignments/details";
     }

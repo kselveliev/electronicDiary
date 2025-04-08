@@ -9,6 +9,8 @@ import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.StudentRepository;
 import com.ednevnik.dnevnik.repository.TeacherRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,6 +18,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+
+record TeacherDTO(Long id, String firstName, String lastName) {
+    static TeacherDTO fromTeacher(Teacher teacher) {
+        return new TeacherDTO(teacher.getId(), teacher.getFirstName(), teacher.getLastName());
+    }
+}
 
 @Controller
 @RequestMapping("/classes")
@@ -32,9 +40,25 @@ public class ClassController {
     public String listClasses(Model model) {
         model.addAttribute("classes", classRepository.findAll());
         model.addAttribute("schools", schoolRepository.findAll());
-        model.addAttribute("teachers", teacherRepository.findAll());
         model.addAttribute("newClass", new Class());
         return "classes/list";
+    }
+
+    @GetMapping("/teachers-by-school/{schoolId}")
+    @ResponseBody
+    public ResponseEntity<List<TeacherDTO>> getTeachersBySchool(@PathVariable Long schoolId) {
+        try {
+            List<TeacherDTO> teachers = teacherRepository.findBySchoolId(schoolId)
+                .stream()
+                .map(TeacherDTO::fromTeacher)
+                .toList();
+            
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(teachers);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/{id}")
