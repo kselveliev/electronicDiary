@@ -1,17 +1,22 @@
 package com.ednevnik.dnevnik.controller;
 
 import com.ednevnik.dnevnik.model.Class;
+import com.ednevnik.dnevnik.model.Director;
 import com.ednevnik.dnevnik.model.School;
 import com.ednevnik.dnevnik.model.Student;
 import com.ednevnik.dnevnik.model.Teacher;
+import com.ednevnik.dnevnik.model.User;
+import com.ednevnik.dnevnik.model.UserRole;
 import com.ednevnik.dnevnik.repository.ClassRepository;
 import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.StudentRepository;
 import com.ednevnik.dnevnik.repository.TeacherRepository;
+import com.ednevnik.dnevnik.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -37,9 +42,23 @@ public class ClassController {
     private final StudentRepository studentRepository;
 
     @GetMapping
-    public String listClasses(Model model) {
-        model.addAttribute("classes", classRepository.findAll());
-        model.addAttribute("schools", schoolRepository.findAll());
+    public String listClasses(Model model, Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User user = userDetails.getUser();
+
+        // For admin, show all classes and schools
+        if (user.getRole() == UserRole.ROLE_ADMIN) {
+            model.addAttribute("classes", classRepository.findAll());
+            model.addAttribute("schools", schoolRepository.findAll());
+        } 
+        // For director, show only their school's classes and their school
+        else if (user.getRole() == UserRole.ROLE_DIRECTOR) {
+            Director director = (Director) user;
+            School directorSchool = director.getSchool();
+            model.addAttribute("classes", classRepository.findBySchoolId(directorSchool.getId()));
+            model.addAttribute("schools", List.of(directorSchool));
+        }
+
         model.addAttribute("newClass", new Class());
         return "classes/list";
     }
