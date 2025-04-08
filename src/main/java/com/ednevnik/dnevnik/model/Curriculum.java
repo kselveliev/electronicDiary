@@ -20,6 +20,9 @@ public class Curriculum {
     private String name;
 
     @Column(nullable = false)
+    private Integer grade;
+
+    @Column(nullable = false)
     private LocalDate startDate;
 
     @Column(nullable = false)

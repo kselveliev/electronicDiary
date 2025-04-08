@@ -33,6 +33,7 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
+                                        <th>Grade</th>
                                         <th>School</th>
                                         <th>Start Date</th>
                                         <th>End Date</th>
@@ -43,6 +44,7 @@
                                 <tbody>
                                     <tr th:each="curriculum : ${curriculums}">
                                         <td th:text="${curriculum.name}">Curriculum Name</td>
+                                        <td th:text="'Grade ' + ${curriculum.grade}">Grade</td>
                                         <td th:text="${curriculum.school.name}">School Name</td>
                                         <td th:text="${#temporals.format(curriculum.startDate, 'dd-MM-yyyy')}">Start Date</td>
                                         <td th:text="${#temporals.format(curriculum.endDate, 'dd-MM-yyyy')}">End Date</td>
@@ -52,7 +54,7 @@
                                         </td>
                                         <td>
                                             <a th:href="@{/curriculum/{id}(id=${curriculum.id})}" 
-                                               class="btn btn-info btn-sm">View Details</a>
+                                               class="btn btn-info btn-sm">View Schedules</a>
                                             <a th:href="@{/curriculum/{id}/edit(id=${curriculum.id})}" 
                                                class="btn btn-primary btn-sm"
                                                th:if="${canEdit}">Edit</a>
@@ -69,7 +71,7 @@
                                         </td>
                                     </tr>
                                     <tr th:if="${curriculums.empty}">
-                                        <td colspan="6" class="text-center">No curriculums found</td>
+                                        <td colspan="7" class="text-center">No curriculums found</td>
                                     </tr>
                                 </tbody>
                             </table>

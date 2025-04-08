@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ClassRepository extends JpaRepository<Class, Long> {
     List<Class> findBySchoolId(Long schoolId);
+    List<Class> findBySchoolIdAndGrade(Long schoolId, Integer grade);
 } 

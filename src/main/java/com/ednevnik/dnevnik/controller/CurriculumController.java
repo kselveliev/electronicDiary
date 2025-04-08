@@ -82,6 +82,7 @@ public class CurriculumController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public String createCurriculum(@RequestParam String name,
+                                 @RequestParam Integer grade,
                                  @RequestParam String startDate,
                                  @RequestParam String endDate,
                                  @RequestParam Long schoolId,
@@ -89,6 +90,7 @@ public class CurriculumController {
         try {
             Curriculum curriculum = new Curriculum();
             curriculum.setName(name);
+            curriculum.setGrade(grade);
             curriculum.setStartDate(LocalDate.parse(startDate));
             curriculum.setEndDate(LocalDate.parse(endDate));
             curriculum.setSchool(schoolRepository.findById(schoolId)
@@ -139,17 +141,16 @@ public class CurriculumController {
             throw new RuntimeException("You don't have access to this curriculum");
         }
         
-        // Get all classes for the school
-        List<com.ednevnik.dnevnik.model.Class> allClasses = classRepository.findBySchoolId(curriculum.getSchool().getId());
-        
-        // Group classes by grade
-        Map<Integer, List<com.ednevnik.dnevnik.model.Class>> classesByGrade = allClasses.stream()
-                .collect(Collectors.groupingBy(com.ednevnik.dnevnik.model.Class::getGrade));
+        // Get classes for this grade in the school
+        List<com.ednevnik.dnevnik.model.Class> classes = classRepository.findBySchoolIdAndGrade(
+            curriculum.getSchool().getId(), 
+            curriculum.getGrade()
+        );
         
         model.addAttribute("curriculum", curriculum);
         model.addAttribute("subjects", subjectRepository.findAll());
         model.addAttribute("teachers", teacherRepository.findBySchoolId(curriculum.getSchool().getId()));
-        model.addAttribute("classesByGrade", classesByGrade);
+        model.addAttribute("classes", classes);
         model.addAttribute("curriculumSubjects", curriculumSubjectRepository.findByCurriculumId(id));
         model.addAttribute("canEdit", user.getRole() == UserRole.ROLE_ADMIN || user.getRole() == UserRole.ROLE_DIRECTOR);
         
@@ -189,6 +190,7 @@ public class CurriculumController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public String updateCurriculum(@PathVariable Long id,
                                  @RequestParam String name,
+                                 @RequestParam Integer grade,
                                  @RequestParam String startDate,
                                  @RequestParam String endDate,
                                  @RequestParam Long schoolId,
@@ -229,6 +231,7 @@ public class CurriculumController {
             
             // Update curriculum
             curriculum.setName(name);
+            curriculum.setGrade(grade);
             curriculum.setStartDate(parsedStartDate);
             curriculum.setEndDate(parsedEndDate);
             
@@ -290,14 +293,21 @@ public class CurriculumController {
             Curriculum curriculum = curriculumRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Curriculum not found"));
             
+            // Verify the class is from the correct grade
+            com.ednevnik.dnevnik.model.Class schoolClass = classRepository.findById(classId)
+                    .orElseThrow(() -> new RuntimeException("Class not found"));
+            
+            if (!schoolClass.getGrade().equals(curriculum.getGrade())) {
+                throw new RuntimeException("Selected class is not from grade " + curriculum.getGrade());
+            }
+            
             CurriculumSubject curriculumSubject = new CurriculumSubject();
             curriculumSubject.setCurriculum(curriculum);
             curriculumSubject.setSubject(subjectRepository.findById(subjectId)
                     .orElseThrow(() -> new RuntimeException("Subject not found")));
             curriculumSubject.setTeacher(teacherRepository.findById(teacherId)
                     .orElseThrow(() -> new RuntimeException("Teacher not found")));
-            curriculumSubject.setSchoolClass(classRepository.findById(classId)
-                    .orElseThrow(() -> new RuntimeException("Class not found")));
+            curriculumSubject.setSchoolClass(schoolClass);
             curriculumSubject.setDayOfWeek(dayOfWeek);
             curriculumSubject.setLessonNumber(lessonNumber);
             

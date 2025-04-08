@@ -27,6 +27,12 @@
                                 <input type="text" class="form-control" id="name" name="name" 
                                        th:value="${curriculum.name}" required>
                             </div>
+
+                            <div class="mb-3">
+                                <label for="grade" class="form-label">Grade</label>
+                                <input type="number" class="form-control" id="grade" name="grade" 
+                                       th:value="${curriculum.grade}" min="1" max="12" required>
+                            </div>
                             
                             <div class="mb-3">
                                 <label for="schoolId" class="form-label">School</label>
@@ -68,5 +74,16 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Grade validation
+        document.getElementById('grade').addEventListener('input', function() {
+            const grade = parseInt(this.value);
+            if (grade < 1 || grade > 12) {
+                this.setCustomValidity('Grade must be between 1 and 12');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    </script>
 </body>
 </html> 

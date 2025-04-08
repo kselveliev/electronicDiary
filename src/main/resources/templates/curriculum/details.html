@@ -15,6 +15,21 @@
             height: 80px;
             vertical-align: middle;
         }
+        .schedule-nav {
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 1rem;
+        }
+        .schedule-nav .nav-link {
+            border: 1px solid transparent;
+            border-top-left-radius: .25rem;
+            border-top-right-radius: .25rem;
+            padding: .5rem 1rem;
+            margin-bottom: -1px;
+        }
+        .schedule-nav .nav-link.active {
+            border-color: #dee2e6 #dee2e6 #fff;
+            background-color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -41,6 +56,7 @@
                             <div class="col-md-6">
                                 <p><strong>Name:</strong> <span th:text="${curriculum.name}">Curriculum Name</span></p>
                                 <p><strong>School:</strong> <span th:text="${curriculum.school.name}">School Name</span></p>
+                                <p><strong>Grade:</strong> <span th:text="'Grade ' + ${curriculum.grade}">Grade</span></p>
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Start Date:</strong> <span th:text="${#temporals.format(curriculum.startDate, 'dd-MM-yyyy')}">Start Date</span></p>
@@ -72,13 +88,12 @@
                                 <label for="classId" class="form-label">Class</label>
                                 <select class="form-select" id="classId" name="classId" required>
                                     <option value="">Select Class</option>
-                                    <optgroup th:each="grade : ${classesByGrade.keySet()}" th:label="'Grade ' + ${grade}">
-                                        <option th:each="class : ${classesByGrade.get(grade)}"
-                                                th:value="${class.id}"
-                                                th:text="${class.name}">Class Name</option>
-                                    </optgroup>
+                                    <option th:each="class : ${classes}"
+                                            th:value="${class.id}"
+                                            th:text="${class.name}">Class Name</option>
                                 </select>
                             </div>
+                            
                             <div class="col-md-2">
                                 <label for="dayOfWeek" class="form-label">Day</label>
                                 <select class="form-select" id="dayOfWeek" name="dayOfWeek" required>
@@ -128,50 +143,72 @@
                     </div>
                 </div>
 
-                <!-- Grade Schedules -->
-                <div th:each="grade : ${classesByGrade.keySet()}" class="card mb-4">
+                <!-- Class Schedules -->
+                <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0" th:text="'Grade ' + ${grade} + ' Schedule'">Grade Schedule</h5>
+                        <h5 class="mb-0">Class Schedules</h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered timetable">
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Monday</th>
-                                        <th>Tuesday</th>
-                                        <th>Wednesday</th>
-                                        <th>Thursday</th>
-                                        <th>Friday</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="lesson : ${#numbers.sequence(1, 7)}">
-                                        <td th:text="${lesson + '. Lesson'}">1. Lesson</td>
-                                        <td th:each="day : ${T(java.time.DayOfWeek).values()}" 
-                                            th:if="${day.value <= 5}"
-                                            class="lesson-cell">
-                                            <div th:each="class : ${classesByGrade.get(grade)}">
-                                                <div th:each="subject : ${curriculumSubjects}" 
-                                                     th:if="${subject.schoolClass.id == class.id and subject.dayOfWeek == day and subject.lessonNumber == lesson}">
-                                                    <strong th:text="${class.name + ': ' + subject.subject.name}">Class: Subject</strong><br>
-                                                    <small th:text="${subject.teacher.firstName + ' ' + subject.teacher.lastName}">Teacher</small>
-                                                    <form th:if="${canEdit}" 
-                                                          th:action="@{/curriculum/{curriculumId}/subjects/{subjectId}/remove(curriculumId=${curriculum.id},subjectId=${subject.id})}" 
-                                                          method="post" class="d-inline">
-                                                        <button type="submit" 
-                                                                class="btn btn-danger btn-sm float-right"
-                                                                onclick="return confirm('Are you sure you want to remove this lesson?')">
-                                                            Remove
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <!-- Class Navigation Tabs -->
+                        <ul class="nav nav-tabs schedule-nav" id="classScheduleTabs" role="tablist">
+                            <li class="nav-item" th:each="class, iterStat : ${classes}">
+                                <a class="nav-link" 
+                                   th:classappend="${iterStat.first} ? 'active'" 
+                                   th:id="'class-tab-' + ${class.id}"
+                                   data-bs-toggle="tab" 
+                                   th:href="'#class-schedule-' + ${class.id}" 
+                                   role="tab" 
+                                   th:text="${class.name}">Class Name</a>
+                            </li>
+                        </ul>
+
+                        <!-- Class Schedule Tables -->
+                        <div class="tab-content" id="classScheduleContent">
+                            <div class="tab-pane fade" 
+                                 th:classappend="${iterStat.first} ? 'show active'" 
+                                 th:each="class, iterStat : ${classes}"
+                                 th:id="'class-schedule-' + ${class.id}" 
+                                 role="tabpanel">
+                                <div class="table-responsive mt-3">
+                                    <table class="table table-bordered timetable">
+                                        <thead>
+                                            <tr>
+                                                <th>Time</th>
+                                                <th>Monday</th>
+                                                <th>Tuesday</th>
+                                                <th>Wednesday</th>
+                                                <th>Thursday</th>
+                                                <th>Friday</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="lesson : ${#numbers.sequence(1, 7)}">
+                                                <td th:text="${lesson + '. Lesson'}">1. Lesson</td>
+                                                <td th:each="day : ${T(java.time.DayOfWeek).values()}" 
+                                                    th:if="${day.value <= 5}"
+                                                    class="lesson-cell">
+                                                    <div th:each="subject : ${curriculumSubjects}" 
+                                                         th:if="${subject.schoolClass.id == class.id and subject.dayOfWeek == day and subject.lessonNumber == lesson}">
+                                                        <div>
+                                                            <strong th:text="${subject.subject.name}">Subject</strong><br>
+                                                            <small th:text="${subject.teacher.firstName + ' ' + subject.teacher.lastName}">Teacher</small>
+                                                        </div>
+                                                        <form th:if="${canEdit}" 
+                                                              th:action="@{/curriculum/{curriculumId}/subjects/{subjectId}/remove(curriculumId=${curriculum.id},subjectId=${subject.id})}" 
+                                                              method="post" class="d-inline mt-1">
+                                                            <button type="submit" 
+                                                                    class="btn btn-danger btn-sm"
+                                                                    onclick="return confirm('Are you sure you want to remove this lesson?')">
+                                                                Remove
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
