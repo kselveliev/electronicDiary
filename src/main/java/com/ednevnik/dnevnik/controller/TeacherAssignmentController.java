@@ -49,7 +49,6 @@ public class TeacherAssignmentController {
             @RequestParam Long subjectId,
             @RequestParam Long classId,
             RedirectAttributes redirectAttributes) {
-        try {
             Teacher teacher = teacherRepository.findById(teacherId)
                     .orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
             Subject subject = subjectRepository.findById(subjectId)
@@ -65,9 +64,6 @@ public class TeacherAssignmentController {
 
             classAssignmentRepository.save(assignment);
             redirectAttributes.addFlashAttribute("success", "Subject and class successfully assigned to teacher");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Failed to assign subject and class: " + e.getMessage());
-        }
         return "redirect:/teacher-assignments/" + teacherId;
     }
 
