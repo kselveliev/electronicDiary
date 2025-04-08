@@ -5,6 +5,8 @@ import com.ednevnik.dnevnik.model.Student;
 import com.ednevnik.dnevnik.model.Subject;
 import com.ednevnik.dnevnik.model.Teacher;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,4 +23,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     List<Attendance> findByStudentOrderByCreatedTimestampDesc(Student student);
     List<Attendance> findByStudentInOrderByCreatedTimestampDesc(List<Student> students);
     List<Attendance> findByStudentClassIdAndSubjectIdOrderByCreatedTimestampDesc(Long classId, Long subjectId);
+
+    @Query("SELECT a FROM Attendance a " +
+           "WHERE a.studentClass.school.id = :schoolId AND a.subject.id = :subjectId")
+    List<Attendance> findBySchoolAndSubject(@Param("schoolId") Long schoolId, @Param("subjectId") Long subjectId);
 } 

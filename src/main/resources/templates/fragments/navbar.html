@@ -7,56 +7,59 @@
 <body>
     <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">E-Dnevnik</a>
+            <a class="navbar-brand" th:href="@{/}">E-Dnevnik</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/index">Home</a>
+                        <a class="nav-link" th:href="@{/index}">Home</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a class="nav-link" href="/admin">Admin Panel</a>
+                        <a class="nav-link" th:href="@{/admin}">Admin Panel</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
-                        <a class="nav-link" href="/schools">Schools</a>
+                        <a class="nav-link" th:href="@{/schools}">Schools</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
-                        <a class="nav-link" href="/subjects">Subjects</a>
+                        <a class="nav-link" th:href="@{/subjects}">Subjects</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
-                        <a class="nav-link" href="/classes">Classes</a>
+                        <a class="nav-link" th:href="@{/classes}">Classes</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/curriculum">Curriculum</a>
+                        <a class="nav-link" th:href="@{/curriculum}">Curriculum</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
-                        <a class="nav-link" href="/teacher-assignments">Teacher Assignments</a>
+                        <a class="nav-link" th:href="@{/teacher-assignments}">Teacher Assignments</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'DIRECTOR')">
+                        <a class="nav-link" th:href="@{/statistics}">Statistics</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('TEACHER')">
-                        <a class="nav-link" href="/my-assignments">My Assignments</a>
+                        <a class="nav-link" th:href="@{/my-assignments}">My Assignments</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('TEACHER')">
-                        <a class="nav-link" href="/attendance">Take Attendance</a>
+                        <a class="nav-link" th:href="@{/attendance}">Take Attendance</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('TEACHER')">
-                        <a class="nav-link" href="/attendance/class-view">View Attendance</a>
+                        <a class="nav-link" th:href="@{/attendance/class-view}">View Attendance</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('TEACHER')">
-                        <a class="nav-link" href="/grades">Grades</a>
+                        <a class="nav-link" th:href="@{/grades}">Grades</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('STUDENT')">
-                        <a class="nav-link" href="/my-grades">My Grades</a>
+                        <a class="nav-link" th:href="@{/my-grades}">My Grades</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('STUDENT')">
-                        <a class="nav-link" href="/attendance/my-attendance">My Attendance</a>
+                        <a class="nav-link" th:href="@{/attendance/my-attendance}">My Attendance</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('PARENT')">
-                        <a class="nav-link" href="/children">My Children</a>
+                        <a class="nav-link" th:href="@{/children}">My Children</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('PARENT')">
-                        <a class="nav-link" href="/attendance/children-attendance">Children's Attendance</a>
+                        <a class="nav-link" th:href="@{/attendance/children-attendance}">Children's Attendance</a>
                     </li>
                 </ul>
                 <div class="d-flex">
