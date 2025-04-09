@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.util.Set;
+import lombok.Setter;
 
 @Getter
+@Setter
 @Entity
 @DiscriminatorValue("parent")
 public class Parent extends User {

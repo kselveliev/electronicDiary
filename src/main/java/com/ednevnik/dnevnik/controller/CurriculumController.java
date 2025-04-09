@@ -257,18 +257,6 @@ public class CurriculumController {
         }
     }
 
-    /**
-     * Helper method to filter curriculum subjects by class, day, and lesson number
-     */
-    private CurriculumSubject findSubjectForSlot(List<CurriculumSubject> subjects, Long classId, DayOfWeek day, Integer lessonNumber) {
-        return subjects.stream()
-                .filter(cs -> cs.getSchoolClass().getId().equals(classId) 
-                        && cs.getDayOfWeek() == day 
-                        && cs.getLessonNumber().equals(lessonNumber))
-                .findFirst()
-                .orElse(null);
-    }
-
     @PostMapping("/{id}/subjects")
     @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
     public String addSubjectToCurriculum(@PathVariable Long id,
