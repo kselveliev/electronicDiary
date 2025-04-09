@@ -15,6 +15,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 
 @Controller
 public class StatisticsController {
@@ -56,16 +60,24 @@ public class StatisticsController {
             model.addAttribute("isAdmin", false);
         }
 
+        // Get all subjects for the dropdown
+        List<Subject> allSubjects = subjectRepository.findAll();
+        model.addAttribute("subjects", allSubjects);
+        
         // Initialize maps for statistics
         Map<String, Map<Integer, Long>> gradeDistribution = new HashMap<>();
         Map<String, Map<String, Long>> attendanceDistribution = new HashMap<>();
 
-        // Get all subjects
-        List<Subject> subjects = subjectRepository.findAll();
-        logger.info("Found {} subjects", subjects.size());
+        // Get subjects for statistics (filtered if subjectId is provided)
+        List<Subject> subjectsForStats = subjectId != null 
+            ? allSubjects.stream()
+                .filter(s -> s.getId().equals(subjectId))
+                .collect(Collectors.toList())
+            : allSubjects;
+        logger.info("Processing statistics for {} subjects", subjectsForStats.size());
 
         // Calculate statistics for each subject
-        for (Subject subject : subjects) {
+        for (Subject subject : subjectsForStats) {
             List<Grade> grades;
             List<Attendance> attendances;
 
@@ -105,18 +117,47 @@ public class StatisticsController {
                     ));
                 gradeDistribution.put(subject.getName(), gradeCounts);
 
-                // Calculate attendance distribution
-                Map<String, Long> attendanceCounts = new HashMap<>();
-                attendanceCounts.put("Present", attendances.stream().filter(Attendance::getPresent).count());
-                attendanceCounts.put("Absent", attendances.stream().filter(a -> !a.getPresent()).count());
-                attendanceDistribution.put(subject.getName(), attendanceCounts);
+                // Get the current date and 6 months ago
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime sixMonthsAgo = now.minusMonths(6);
+
+                // Create a map with all months (including those with zero absences)
+                Map<String, Long> absencesByMonth = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
+                
+                // Initialize all months with 0 absences
+                for (int i = 0; i < 6; i++) {
+                    LocalDateTime month = now.minusMonths(i);
+                    String monthKey = month.format(DateTimeFormatter.ofPattern("MMMM yyyy"));
+                    absencesByMonth.put(monthKey, 0L);
+                }
+
+                // Calculate actual absences for each month
+                attendances.stream()
+                    .filter(a -> !a.getPresent()) // Only count absences
+                    .filter(a -> {
+                        LocalDateTime attendanceDate = LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(a.getCreatedTimestamp()),
+                            ZoneId.systemDefault()
+                        );
+                        return !attendanceDate.isBefore(sixMonthsAgo); // Only include last 6 months
+                    })
+                    .forEach(a -> {
+                        LocalDateTime date = LocalDateTime.ofInstant(
+                            Instant.ofEpochMilli(a.getCreatedTimestamp()),
+                            ZoneId.systemDefault()
+                        );
+                        String monthKey = date.format(DateTimeFormatter.ofPattern("MMMM yyyy"));
+                        absencesByMonth.merge(monthKey, 1L, Long::sum);
+                    });
+
+                attendanceDistribution.put(subject.getName(), absencesByMonth);
             }
         }
 
         // Add data to model
         model.addAttribute("gradeDistribution", gradeDistribution);
         model.addAttribute("attendanceDistribution", attendanceDistribution);
-        model.addAttribute("subjects", subjects);
+        model.addAttribute("subjects", subjectsForStats);
         
         model.addAttribute("selectedSchoolId", schoolId);
         model.addAttribute("selectedSubjectId", subjectId);

@@ -63,7 +63,7 @@
                     <div class="col-md-6 mb-4">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="mb-0" th:text="${entry.key + ' - Attendance Distribution'}">Attendance Distribution</h5>
+                                <h5 class="mb-0" th:text="${entry.key + ' - Monthly Absences'}">Monthly Absences</h5>
                             </div>
                             <div class="card-body">
                                 <canvas th:id="'attendanceChart-' + ${entry.key.hashCode()}"></canvas>
@@ -143,7 +143,7 @@
                 });
             }
 
-            // Attendance Distribution Chart
+            // Monthly Absences Chart
             const attendanceData = attendanceDistribution[subjectName];
             const attendanceChartId = 'attendanceChart-' + subjectName.hashCode();
             const attendanceChartCanvas = document.getElementById(attendanceChartId);
@@ -152,31 +152,36 @@
             if (attendanceChartCanvas && attendanceData) {
                 console.log(`Attendance data for ${subjectName}:`, attendanceData);
                 
+                // Get months in reverse order (oldest to newest)
+                const months = Object.keys(attendanceData).sort((a, b) => {
+                    const [monthA, yearA] = a.split(' ');
+                    const [monthB, yearB] = b.split(' ');
+                    const dateA = new Date(`${monthA} 1, ${yearA}`);
+                    const dateB = new Date(`${monthB} 1, ${yearB}`);
+                    return dateA - dateB;
+                });
+                const absenceCounts = months.map(month => attendanceData[month]);
+
                 new Chart(attendanceChartCanvas, {
-                    type: 'pie',
+                    type: 'bar',
                     data: {
-                        labels: ['Present', 'Absent'],
+                        labels: months,
                         datasets: [{
-                            data: [
-                                attendanceData['Present'] || 0,
-                                attendanceData['Absent'] || 0
-                            ],
-                            backgroundColor: [
-                                'rgba(75, 192, 192, 0.5)',
-                                'rgba(255, 99, 132, 0.5)'
-                            ],
-                            borderColor: [
-                                'rgba(75, 192, 192, 1)',
-                                'rgba(255, 99, 132, 1)'
-                            ],
+                            label: 'Number of Absences',
+                            data: absenceCounts,
+                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
                             borderWidth: 1
                         }]
                     },
                     options: {
                         responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
                             }
                         }
                     }
