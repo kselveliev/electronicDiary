@@ -5,6 +5,7 @@ import com.ednevnik.dnevnik.repository.ClassRepository;
 import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.StudentRepository;
 import com.ednevnik.dnevnik.repository.TeacherRepository;
+import com.ednevnik.dnevnik.repository.ClassAssignmentRepository;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class ClassControllerTest {
 
     @Mock
     private StudentRepository studentRepository;
+
+    @Mock
+    private ClassAssignmentRepository classAssignmentRepository;
 
     @Mock
     private Model model;
@@ -195,12 +199,14 @@ class ClassControllerTest {
     @Test
     void deleteClassShouldDeleteClass() {
         // Given
+        doNothing().when(classAssignmentRepository).deleteBySchoolClassId(1L);
         doNothing().when(classRepository).deleteById(1L);
 
         // When
         String redirectUrl = classController.deleteClass(1L, redirectAttributes);
 
         // Then
+        verify(classAssignmentRepository).deleteBySchoolClassId(1L);
         verify(classRepository).deleteById(1L);
         verify(redirectAttributes).addFlashAttribute("success", "Class deleted successfully");
         assertEquals("redirect:/classes", redirectUrl);
