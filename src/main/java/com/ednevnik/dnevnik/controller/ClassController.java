@@ -8,6 +8,7 @@ import com.ednevnik.dnevnik.model.Teacher;
 import com.ednevnik.dnevnik.model.User;
 import com.ednevnik.dnevnik.model.UserRole;
 import com.ednevnik.dnevnik.repository.ClassRepository;
+import com.ednevnik.dnevnik.repository.ClassAssignmentRepository;
 import com.ednevnik.dnevnik.repository.SchoolRepository;
 import com.ednevnik.dnevnik.repository.StudentRepository;
 import com.ednevnik.dnevnik.repository.TeacherRepository;
@@ -40,6 +41,7 @@ public class ClassController {
     private final SchoolRepository schoolRepository;
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
+    private final ClassAssignmentRepository classAssignmentRepository;
 
     @GetMapping
     public String listClasses(Model model, Authentication authentication) {
@@ -109,6 +111,10 @@ public class ClassController {
     @PostMapping("/{id}/delete")
     public String deleteClass(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
+            // First, delete all class assignments associated with this class
+            classAssignmentRepository.deleteBySchoolClassId(id);
+            
+            // Then delete the class itself
             classRepository.deleteById(id);
             redirectAttributes.addFlashAttribute("success", "Class deleted successfully");
         } catch (Exception e) {
