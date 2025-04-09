@@ -2,6 +2,62 @@
 
 A comprehensive electronic diary system for schools, providing grade management, attendance tracking, and statistical analysis.
 
+## Screenshots
+
+### Admin Interface
+#### User Management
+![Admin User Management](docs/screenshots/admin-user-management.png)
+- Create and manage user accounts
+- Assign roles and permissions
+- Manage school assignments
+
+#### School Management
+![Admin School Management](docs/screenshots/admin-school-management.png)
+- Create and configure schools
+- Assign directors
+- Monitor system-wide statistics
+
+### Director Interface
+#### School Dashboard
+![Director Dashboard](docs/screenshots/director-dashboard.png)
+- Overview of school performance
+- Teacher assignments
+- Class management
+
+#### Statistics View
+![Director Statistics](docs/screenshots/director-statistics.png)
+- Grade distribution charts
+- Attendance analytics
+- School-specific reports
+
+### Teacher Interface
+#### Grade Management
+![Teacher Grade Entry](docs/screenshots/teacher-grade-entry.png)
+- Enter and modify grades
+- View class performance
+- Track student progress
+
+#### Attendance Tracking
+![Teacher Attendance](docs/screenshots/teacher-attendance.png)
+- Mark daily attendance
+- View attendance history
+- Generate reports
+
+### Student Interface
+#### Personal Dashboard
+![Student Dashboard](docs/screenshots/student-dashboard.png)
+- View current grades
+- Check attendance record
+- Access class schedule
+
+
+### Parent Interface
+#### Children Overview
+![Parent Dashboard](docs/screenshots/parent-dashboard.png)
+- View children's grades
+- Monitor attendance
+- Access schedules
+
 ## Features
 
 ### User Roles and Access Control
