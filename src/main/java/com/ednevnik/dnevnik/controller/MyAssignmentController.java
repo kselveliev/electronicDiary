@@ -1,6 +1,5 @@
 package com.ednevnik.dnevnik.controller;
 
-import com.ednevnik.dnevnik.model.ClassAssignment;
 import com.ednevnik.dnevnik.model.Teacher;
 import com.ednevnik.dnevnik.repository.ClassAssignmentRepository;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;

@@ -1,11 +1,9 @@
 package com.ednevnik.dnevnik.controller;
 
 import com.ednevnik.dnevnik.model.Parent;
-import com.ednevnik.dnevnik.model.Student;
-import com.ednevnik.dnevnik.model.UserRole;
 import com.ednevnik.dnevnik.service.ParentService;
 import com.ednevnik.dnevnik.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,18 +11,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
+@AllArgsConstructor
 @RequestMapping("/parent-assignments")
 @PreAuthorize("hasAnyRole('ADMIN', 'DIRECTOR')")
 public class ParentAssignmentController {
 
     private final ParentService parentService;
     private final UserService userService;
-
-    @Autowired
-    public ParentAssignmentController(ParentService parentService, UserService userService) {
-        this.parentService = parentService;
-        this.userService = userService;
-    }
 
     @GetMapping
     public String showParentAssignments(Model model) {
