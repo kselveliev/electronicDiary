@@ -3,7 +3,7 @@ package com.ednevnik.dnevnik.controller;
 import com.ednevnik.dnevnik.model.*;
 import com.ednevnik.dnevnik.repository.*;
 import com.ednevnik.dnevnik.security.UserDetailsImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -21,19 +21,13 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 @Controller
+@AllArgsConstructor
 public class StatisticsController {
     private static final Logger logger = LoggerFactory.getLogger(StatisticsController.class);
 
-    @Autowired
     private GradeRepository gradeRepository;
-
-    @Autowired
     private AttendanceRepository attendanceRepository;
-
-    @Autowired
     private SchoolRepository schoolRepository;
-
-    @Autowired
     private SubjectRepository subjectRepository;
 
     @GetMapping("/statistics")
